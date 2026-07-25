@@ -179,3 +179,8 @@ Recruit wizard with archetype-biased skills and curated portrait picker (wallet-
 Reworked Mission board with pulsing open pins and archived settled regions.
 Briefing page uses stake/purse/window chips in 0G; no wei or chain jargon.
 
+### 6.4 — Done
+
+Added Deploy theater: pick operative, seal animation, local in-field persistence.
+Field desk lists active deployments; no on-chain accept/submit in this phase.
+
