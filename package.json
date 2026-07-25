@@ -13,7 +13,8 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "dev:api": "npm run dev --workspace=@sekaigent/api",
-    "dev:web": "npm run dev --workspace=@sekaigent/web"
+    "dev:web": "npm run dev --workspace=@sekaigent/web",
+    "dev": "bash scripts/dev.sh"
   },
   "engines": {
     "node": ">=20"

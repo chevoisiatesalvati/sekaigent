@@ -1,12 +1,23 @@
 "use client";
 
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Html, OrbitControls, Stars } from "@react-three/drei";
-import { Suspense, useMemo, useRef } from "react";
-import { TextureLoader, SRGBColorSpace, type Group } from "three";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import {
+  TextureLoader,
+  SRGBColorSpace,
+  Vector3,
+  type Group,
+} from "three";
 import { REGIONS, type MissionListItem } from "@/lib/api";
 
+type ControlsLike = {
+  target: Vector3;
+  update: () => void;
+};
+
 const EARTH_TEXTURE = "/textures/earth-day.jpg";
+const DEFAULT_CAMERA_DISTANCE = 4.2;
 
 type WorldStageProps = {
   missions: MissionListItem[];
@@ -14,7 +25,8 @@ type WorldStageProps = {
   onSelectMission: (missionId: string) => void;
 };
 
-const REGION_SPHERE: Record<string, [number, number]> = {
+/** Lat/lon for region pins on the textured sphere. */
+export const REGION_SPHERE: Record<string, [number, number]> = {
   harbor: [-35, 20],
   embassy: [10, 45],
   archive: [55, 15],
@@ -31,6 +43,58 @@ function latLonToVec(lat: number, lon: number, radius: number) {
   ] as [number, number, number];
 }
 
+/** One-shot camera move when the selected case changes; manual orbit stays free after. */
+function CameraFocus({
+  selectedMissionId,
+  missions,
+}: {
+  selectedMissionId: string | null;
+  missions: MissionListItem[];
+}) {
+  const { camera } = useThree();
+  const controls = useThree((s) => s.controls) as ControlsLike | null;
+  const lastFocusedId = useRef<string | null>(null);
+  const anim = useRef<{
+    from: Vector3;
+    to: Vector3;
+    t: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!selectedMissionId) return;
+    if (lastFocusedId.current === selectedMissionId) return;
+    lastFocusedId.current = selectedMissionId;
+
+    const mission = missions.find((m) => m.id === selectedMissionId);
+    if (!mission) return;
+    const [lat, lon] = REGION_SPHERE[mission.region_id] ?? [0, 0];
+    const distance = Math.max(camera.position.length(), DEFAULT_CAMERA_DISTANCE);
+    const [x, y, z] = latLonToVec(lat, lon, distance);
+    anim.current = {
+      from: camera.position.clone(),
+      to: new Vector3(x, y, z),
+      t: 0,
+    };
+  }, [selectedMissionId, missions, camera]);
+
+  useFrame((_, delta) => {
+    if (!anim.current) return;
+    anim.current.t = Math.min(1, anim.current.t + delta * 2.2);
+    const ease = 1 - (1 - anim.current.t) ** 3;
+    camera.position.lerpVectors(anim.current.from, anim.current.to, ease);
+    camera.lookAt(0, 0, 0);
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+    if (anim.current.t >= 1) {
+      anim.current = null;
+    }
+  });
+
+  return null;
+}
+
 function TexturedGlobe({
   missions,
   selectedMissionId,
@@ -39,12 +103,6 @@ function TexturedGlobe({
   const globeGroup = useRef<Group>(null);
   const earthMap = useLoader(TextureLoader, EARTH_TEXTURE);
   earthMap.colorSpace = SRGBColorSpace;
-
-  useFrame((_, delta) => {
-    if (globeGroup.current) {
-      globeGroup.current.rotation.y += delta * 0.06;
-    }
-  });
 
   const pins = useMemo(() => {
     return REGIONS.map((region) => {
@@ -134,7 +192,7 @@ function TexturedGlobe({
 export function WorldStage(props: WorldStageProps) {
   return (
     <Canvas
-      camera={{ position: [0, 0.6, 4.2], fov: 42 }}
+      camera={{ position: [0, 0.6, DEFAULT_CAMERA_DISTANCE], fov: 42 }}
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true }}
       style={{ width: "100%", height: "100%" }}
@@ -147,7 +205,12 @@ export function WorldStage(props: WorldStageProps) {
       <Suspense fallback={null}>
         <TexturedGlobe {...props} />
       </Suspense>
+      <CameraFocus
+        selectedMissionId={props.selectedMissionId}
+        missions={props.missions}
+      />
       <OrbitControls
+        makeDefault
         enablePan={false}
         minDistance={3.2}
         maxDistance={6}

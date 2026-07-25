@@ -108,13 +108,14 @@ node -e "const {createHmac}=require('crypto'); console.log(createHmac('sha256', 
 | `NEXT_PUBLIC_OG_CHAIN_ID` | Chain id for wagmi | `16661` |
 | `NEXT_PUBLIC_OG_RPC_URL` | RPC the wallet/dapp uses | Same as `OG_RPC_URL` or a public/private RPC you prefer. |
 
-### 0G Compute / Storage (ops, not all in `.env.example` yet)
+### 0G Compute / Storage
 
-For live inference/storage uploads you also need:
+For live **mission-order suggest** (`POST /play/suggest`):
 
-- A funded 0G wallet (gas + storage fees)
-- Compute ledger balance (MCP `compute_deposit` / `@0gfoundation/0g-cc`)
-- Optionally Cursor MCP `user-0g-cc` authenticated so tools see `walletConnected: true`
+- Fund the **Router** balance at [pc.0g.ai](https://pc.0g.ai) and set `OG_COMPUTE_ROUTER_API_KEY` (see `.env.example`)
+- Router is independent from Direct/MCP ledger balances
+
+For storage uploads / Cursor MCP ops: funded wallet + optional `user-0g-cc` auth.
 
 See [`docs/0g-compute-mcp.md`](docs/0g-compute-mcp.md) and [`docs/mainnet-ops.md`](docs/mainnet-ops.md).
 

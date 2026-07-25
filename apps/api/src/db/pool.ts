@@ -17,6 +17,7 @@ let pglite: { close: () => Promise<void>; query: Function; exec: Function; waitR
   null;
 let pgPool: { end: () => Promise<void> } | null = null;
 let migrated = false;
+let activeMode: "pglite" | "postgres" = "postgres";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -62,32 +63,43 @@ function wantsPglite(): boolean {
   );
 }
 
-export async function getPool(): Promise<DbClient> {
-  if (client) return client;
+function isUnreachablePostgresError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const code = "code" in err ? String(err.code) : "";
+  return (
+    code === "ECONNREFUSED" ||
+    code === "ENOTFOUND" ||
+    code === "ECONNRESET" ||
+    code === "ENOENT" ||
+    code === "57P03" // cannot_connect_now
+  );
+}
 
-  if (wantsPglite()) {
-    const { PGlite } = await import("@electric-sql/pglite");
-    const dataDir =
-      process.env.PGLITE_DATA_DIR ?? join(__dirname, "../../.data/pglite");
-    mkdirSync(dataDir, { recursive: true });
-    const db = new PGlite(dataDir);
-    await db.waitReady;
-    pglite = db;
-    const wrapped: DbClient & { exec: (sql: string) => Promise<unknown> } = {
-      exec: (sql: string) => db.exec(sql),
-      async query<T = Record<string, unknown>>(sql: string, params: unknown[] = []) {
-        const result = await db.query(sql, params);
-        return {
-          rows: result.rows as T[],
-          rowCount: result.affectedRows ?? result.rows.length,
-        };
-      },
-    };
-    await ensureMigrations(wrapped);
-    client = wrapped;
-    return client;
-  }
+async function openPglite(): Promise<DbClient> {
+  const { PGlite } = await import("@electric-sql/pglite");
+  const dataDir =
+    process.env.PGLITE_DATA_DIR ?? join(__dirname, "../../.data/pglite");
+  mkdirSync(dataDir, { recursive: true });
+  const db = new PGlite(dataDir);
+  await db.waitReady;
+  pglite = db;
+  const wrapped: DbClient & { exec: (sql: string) => Promise<unknown> } = {
+    exec: (sql: string) => db.exec(sql),
+    async query<T = Record<string, unknown>>(sql: string, params: unknown[] = []) {
+      const result = await db.query(sql, params);
+      return {
+        rows: result.rows as T[],
+        rowCount: result.affectedRows ?? result.rows.length,
+      };
+    },
+  };
+  await ensureMigrations(wrapped);
+  activeMode = "pglite";
+  client = wrapped;
+  return client;
+}
 
+async function openPostgres(): Promise<DbClient> {
   const pg = await import("pg");
   const pool = new pg.default.Pool({ connectionString: config.databaseUrl });
   pgPool = pool;
@@ -97,9 +109,35 @@ export async function getPool(): Promise<DbClient> {
       return { rows: result.rows as T[], rowCount: result.rowCount ?? 0 };
     },
   };
+  // Probe connectivity before declaring postgres ready
+  await wrapped.query("SELECT 1 AS ok");
   await ensureMigrations(wrapped);
+  activeMode = "postgres";
   client = wrapped;
   return client;
+}
+
+export async function getPool(): Promise<DbClient> {
+  if (client) return client;
+
+  if (wantsPglite()) {
+    return openPglite();
+  }
+
+  try {
+    return await openPostgres();
+  } catch (err) {
+    if (!isUnreachablePostgresError(err)) throw err;
+    if (pgPool) {
+      await pgPool.end().catch(() => undefined);
+      pgPool = null;
+    }
+    console.warn(
+      `[db] Postgres unreachable (${config.databaseUrl}); falling back to embedded PGlite. ` +
+        `Start docker compose up -d for Postgres, or set DATABASE_URL=pglite.`,
+    );
+    return openPglite();
+  }
 }
 
 export async function closePool(): Promise<void> {
@@ -113,10 +151,11 @@ export async function closePool(): Promise<void> {
   }
   client = null;
   migrated = false;
+  activeMode = wantsPglite() ? "pglite" : "postgres";
 }
 
 export function dbMode(): "pglite" | "postgres" {
-  return wantsPglite() ? "pglite" : "postgres";
+  return activeMode;
 }
 
 /** Used only to silence unused import lint if existsSync needed later */
