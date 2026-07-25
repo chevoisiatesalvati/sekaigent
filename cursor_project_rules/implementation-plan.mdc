@@ -86,7 +86,12 @@ Relayer key read from env only; unit tests cover calldata encoding.
 
 ## Phase 3 — Play + Eval
 
-### 3.1–3.4 — Pending
+### 3.1 — Done
+
+Added AES-GCM sealed JSON helpers plus MemoryStorage and OgStorageClient (0G mainnet indexer).
+Sealed round-trip tests pass; live mainnet upload requires funded DEPLOYER_PRIVATE_KEY (MCP wallet not connected yet).
+
+### 3.2–3.4 — Pending
 
 ## Phase 4 — Frontend
 

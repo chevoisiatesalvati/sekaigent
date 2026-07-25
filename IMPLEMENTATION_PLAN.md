@@ -185,7 +185,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 
 | Sub | Work | Status |
 |-----|------|--------|
-| **3.1** | 0G Storage SDK helpers | Pending |
+| **3.1** | 0G Storage SDK helpers | Done |
 | **3.2** | MissionPlay generator | Pending |
 | **3.3** | Rubric evaluator | Pending |
 | **3.4** | Evaluate and settle pipeline | Pending |
@@ -289,3 +289,8 @@ Fixture test proves event rows persist in the indexed_events table.
 
 Wired evaluator relayer dry-run builders for postEvaluation and settle (encode calldata, no broadcast).
 Relayer key read from env only; unit tests cover calldata encoding.
+
+### 3.1 — Done
+
+Added AES-GCM sealed JSON helpers plus MemoryStorage and OgStorageClient (0G mainnet indexer).
+Sealed round-trip tests pass; live mainnet upload requires funded DEPLOYER_PRIVATE_KEY (MCP wallet not connected yet).
