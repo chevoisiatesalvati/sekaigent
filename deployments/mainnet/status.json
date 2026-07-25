@@ -13,21 +13,15 @@
     }
   },
   "contracts": {
-    "SekaiAgent": "0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974",
-    "MissionVault": "0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b"
+    "SekaiAgent": "0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0",
+    "MissionVault": "0xECEb0d92Ce37Fa48922991aFa70460D9c62666df"
   },
   "explorer": {
-    "SekaiAgent": "https://chainscan.0g.ai/address/0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974",
-    "MissionVault": "https://chainscan.0g.ai/address/0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b"
+    "SekaiAgent": "https://chainscan.0g.ai/address/0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0",
+    "MissionVault": "https://chainscan.0g.ai/address/0xECEb0d92Ce37Fa48922991aFa70460D9c62666df"
   },
-  "redeployedAt": "2026-07-26",
-  "deployTxs": {
-    "SekaiAgent": "0x8ec7d53e4e56c26a85822d747aa323999f729c22a6a2021029fe2da874fc8f5f",
-    "MissionVault": "0x83b54a23f00ec5f94d0cbf5e94417d4f979fcd2e4899c7c55a350e05c6004452"
-  },
-  "updatedAt": "2026-07-26T00:00:00.000Z",
+  "updatedAt": "2026-07-25T00:00:00.000Z",
   "firstAgent": "deployments/mainnet/first-agent.json",
   "firstMission": "deployments/mainnet/first-mission.json",
-  "firstMissionAudit": "deployments/mainnet/first-mission-audit.json",
-  "notes": "first-* artifacts refer to prior Phase 5 contracts; live addresses above are the 2026-07-26 redeploy."
+  "firstMissionAudit": "deployments/mainnet/first-mission-audit.json"
 }

@@ -35,9 +35,9 @@ export const config = {
   ogStorageIndexer:
     process.env.OG_STORAGE_INDEXER ?? "https://indexer-storage-turbo.0g.ai",
   missionVaultAddress: (process.env.MISSION_VAULT_ADDRESS ??
-    "0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b") as `0x${string}`,
+    "0xECEb0d92Ce37Fa48922991aFa70460D9c62666df") as `0x${string}`,
   sekaiAgentAddress: (process.env.SEKAI_AGENT_ADDRESS ??
-    "0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974") as `0x${string}`,
+    "0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0") as `0x${string}`,
   relayerPrivateKey: normalizeKey(process.env.EVALUATOR_RELAYER_PRIVATE_KEY),
   adminPrivateKey: normalizeKey(process.env.ADMIN_PRIVATE_KEY),
   storagePrivateKey: normalizeKey(

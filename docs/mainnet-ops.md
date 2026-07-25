@@ -123,11 +123,11 @@ Happy path:
 See [`deployments/mainnet/status.json`](../deployments/mainnet/status.json).
 
 
-## Live deployment (2026-07-26 redeploy)
+## Live deployment (2026-07-25)
 
 | Contract | Address |
 |----------|---------|
-| SekaiAgent | `0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974` |
-| MissionVault | `0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b` |
+| SekaiAgent | `0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0` |
+| MissionVault | `0xECEb0d92Ce37Fa48922991aFa70460D9c62666df` |
 
-Admin / relayer: `0x8dA01238985992E63Bd09EBF05963f10683c3378`. Prior Phase 5 addresses and `first-*` artifacts refer to the superseded 2026-07-25 deploy.
+First agent tokenId `1`. First mission id `1` settled with audit at `deployments/mainnet/first-mission-audit.json`.
