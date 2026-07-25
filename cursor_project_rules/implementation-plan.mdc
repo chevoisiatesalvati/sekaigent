@@ -64,7 +64,12 @@ Local forge script dry-run succeeds; mainnet broadcast deferred to Phase 5.
 
 ## Phase 2 — Backend API
 
-### 2.1–2.4 — Pending
+### 2.1 — Done
+
+Bootstrapped NestJS API with Postgres schema (missions/entrants/plays/evaluations/events) and docker-compose.
+Migrations apply via PGlite locally when Docker is unavailable; health endpoint module builds clean.
+
+### 2.2–2.4 — Pending
 
 ## Phase 3 — Play + Eval
 

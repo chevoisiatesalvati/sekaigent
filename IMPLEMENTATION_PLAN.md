@@ -176,7 +176,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 
 | Sub | Work | Status |
 |-----|------|--------|
-| **2.1** | NestJS + Postgres models | Pending |
+| **2.1** | NestJS + Postgres models | Done |
 | **2.2** | Admin mission authoring | Pending |
 | **2.3** | Chain event indexer | Pending |
 | **2.4** | Evaluator relayer | Pending |
@@ -269,3 +269,8 @@ Settle tests cover 3-entrant 50/30/20 split, tie-break by submit time, 5-entrant
 
 Added Deploy.s.sol, ERC8004RegisterStub, deployments/mainnet address placeholders + ABIs, and deploy docs.
 Local forge script dry-run succeeds; mainnet broadcast deferred to Phase 5.
+
+### 2.1 — Done
+
+Bootstrapped NestJS API with Postgres schema (missions/entrants/plays/evaluations/events) and docker-compose.
+Migrations apply via PGlite locally when Docker is unavailable; health endpoint module builds clean.
