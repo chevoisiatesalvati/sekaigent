@@ -1,5 +1,19 @@
-import { Body, Controller, Get, Inject, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import { AgentsService, type AgentPublicCard } from "./agents.service.js";
+import type {
+  AgentPrivateIntelPayload,
+  AgentPublicCardPayload,
+} from "./agent-package.js";
 
 @Controller("agents")
 export class AgentsController {
@@ -78,5 +92,48 @@ export class AgentsController {
     };
     await this.agents.upsertCard(card);
     return { ok: true, card };
+  }
+
+  /**
+   * Reseal package to 0G Storage + admin updateMetadata.
+   * Caller must be the on-chain token owner (ownerAddress).
+   */
+  @Post(":tokenId/sync")
+  async sync(
+    @Param("tokenId") tokenId: string,
+    @Body()
+    body: {
+      ownerAddress: string;
+      publicCard: AgentPublicCardPayload;
+      privateIntel: AgentPrivateIntelPayload;
+    },
+  ) {
+    if (!/^\d+$/.test(tokenId)) {
+      throw new HttpException({ error: "invalid_token_id" }, HttpStatus.BAD_REQUEST);
+    }
+    if (
+      !body?.ownerAddress ||
+      !body.publicCard?.name ||
+      !body.publicCard?.codename ||
+      !body.privateIntel?.personality ||
+      !body.privateIntel?.skills
+    ) {
+      throw new HttpException({ error: "missing_fields" }, HttpStatus.BAD_REQUEST);
+    }
+    try {
+      return await this.agents.syncPackage({
+        tokenId,
+        ownerAddress: body.ownerAddress,
+        publicCard: body.publicCard,
+        privateIntel: body.privateIntel,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "sync_failed";
+      const status =
+        message === "not_token_owner"
+          ? HttpStatus.FORBIDDEN
+          : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ error: message }, status);
+    }
   }
 }

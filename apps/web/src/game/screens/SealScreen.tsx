@@ -18,15 +18,13 @@ type SealPhase = "working" | "done" | "failed";
  * 2) Record playHash + storage URI on the API
  * 3) If mission has on_chain_id + agent dossier #: acceptMission (tax) + submitPlay
  * 4) Persist deployment on Field desk
- *
- * Demo/API-only cases (no on_chain_id) stop at step 2 with a clear error — they
- * cannot pay mission tax on-chain until Bureau creates the case on MissionVault.
  */
 export function SealScreen() {
   const missionId = useUiStore((s) => s.selectedMissionId);
   const agentId = useUiStore((s) => s.selectedAgentId);
   const setScreen = useUiStore((s) => s.setScreen);
   const openBrief = useUiStore((s) => s.openBrief);
+  const openLoadout = useUiStore((s) => s.openLoadout);
   const draft = useLoadoutStore((s) => s.draft);
   const resetLoadout = useLoadoutStore((s) => s.reset);
   const deploy = useFieldStore((s) => s.deploy);
@@ -38,27 +36,56 @@ export function SealScreen() {
   const [phase, setPhase] = useState<SealPhase>("working");
   const [detail, setDetail] = useState<string | null>(null);
   const started = useRef(false);
+  const runId = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      // Allow retry when leaving and re-entering Seal
+      started.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (started.current) return;
-    if (!missionId || !agentId || !draft || !agent) return;
+
+    if (!missionId || !agentId) {
+      setError("Missing case or operative.");
+      setPhase("failed");
+      started.current = true;
+      return;
+    }
+    if (!draft) {
+      setError(
+        "No sealed orders draft. Go back to the Orders desk and brief the operative first.",
+      );
+      setPhase("failed");
+      started.current = true;
+      return;
+    }
+    if (!agent) {
+      setError("Operative not found on the desk.");
+      setPhase("failed");
+      started.current = true;
+      return;
+    }
+
     started.current = true;
+    const thisRun = ++runId.current;
     let cancelled = false;
 
     (async () => {
       const mission = await fetchMission(missionId);
-      if (!mission || cancelled) {
-        if (!cancelled) {
-          setError("Case not found.");
-          setPhase("failed");
-        }
+      if (cancelled || thisRun !== runId.current) return;
+      if (!mission) {
+        setError("Case not found.");
+        setPhase("failed");
         return;
       }
 
       const chainId = missionChainId(mission);
       if (!chainId) {
         setError(
-          "This case is not on-chain yet. Open Command (Bureau Ops) and create a live case, or pick a mission with an on-chain id.",
+          "This case is not on-chain yet. Open Bureau, create a live case, then seal against that mission.",
         );
         setDetail(`Local id: ${mission.id}`);
         setPhase("failed");
@@ -73,7 +100,7 @@ export function SealScreen() {
       }
 
       const result = await sealOnChain({ mission, agent, draft });
-      if (cancelled) return;
+      if (cancelled || thisRun !== runId.current) return;
 
       if (result.error || result.localOnly) {
         setError(
@@ -82,13 +109,17 @@ export function SealScreen() {
         );
         setDetail(
           [
-            result.storageUri ? `Storage: ${result.storageUri.slice(0, 18)}…` : null,
+            result.storageUri
+              ? `Storage: ${result.storageUri.slice(0, 18)}…`
+              : null,
             result.playHash ? `playHash: ${result.playHash.slice(0, 12)}…` : null,
+            result.acceptTxHash
+              ? `Accept ${result.acceptTxHash.slice(0, 10)}…`
+              : null,
           ]
             .filter(Boolean)
             .join(" · ") || null,
         );
-        // Still record a local field row so the attempt is visible
         deploy(missionId, agentId, draft, {
           playHash: result.playHash,
           acceptTxHash: result.acceptTxHash,
@@ -119,7 +150,7 @@ export function SealScreen() {
       );
       setPhase("done");
       window.setTimeout(() => {
-        if (!cancelled) setScreen("field");
+        if (!cancelled && thisRun === runId.current) setScreen("field");
       }, 1400);
     })();
 
@@ -136,6 +167,18 @@ export function SealScreen() {
     setScreen,
     sealOnChain,
   ]);
+
+  function retry() {
+    started.current = false;
+    setPhase("working");
+    setError(null);
+    setDetail(null);
+    // bump run so effect re-fires
+    runId.current += 1;
+    if (missionId && agentId) {
+      openLoadout(missionId);
+    }
+  }
 
   return (
     <div className="seal-stage">
@@ -160,8 +203,7 @@ export function SealScreen() {
       >
         {phase === "working" &&
           (status ?? `${COPY.sealDeploy} — packing field plan…`)}
-        {phase === "done" &&
-          (status ?? "Orders on chain. Moving to Field…")}
+        {phase === "done" && (status ?? "Orders on chain. Moving to Field…")}
         {phase === "failed" &&
           "Deployment did not finish on-chain. Read the note below."}
       </motion.p>
@@ -173,26 +215,37 @@ export function SealScreen() {
       {error && (
         <p
           className="empty-note"
-          style={{ marginTop: "0.75rem", maxWidth: "28rem", textAlign: "center" }}
+          style={{
+            marginTop: "0.75rem",
+            maxWidth: "28rem",
+            textAlign: "center",
+          }}
         >
           {error}
         </p>
       )}
-      {phase === "failed" && missionId && (
+      {phase === "failed" && (
         <div className="action-row" style={{ marginTop: "1.25rem" }}>
+          {missionId && (
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => openBrief(missionId)}
+            >
+              Back to case
+            </button>
+          )}
+          {missionId && draft && (
+            <button type="button" className="btn" onClick={retry}>
+              Back to orders
+            </button>
+          )}
           <button
             type="button"
-            className="btn secondary"
-            onClick={() => openBrief(missionId)}
-          >
-            Back to case
-          </button>
-          <button
-            type="button"
-            className="btn"
+            className="btn ghost"
             onClick={() => setScreen("hq")}
           >
-            Open Bureau Ops
+            Open Bureau
           </button>
           <button
             type="button"

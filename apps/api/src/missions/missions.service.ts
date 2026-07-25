@@ -226,12 +226,20 @@ export class MissionsService {
 
   async listMissions() {
     const pool = await getPool();
+    // Live-first: hide API-only demos (no vault id) unless SEED_DEMO is on.
     const { rows } = await pool.query(
-      `SELECT id, on_chain_id, region_id, title, public_brief, duration, starts_at, ends_at,
-              entry_fee_wei, prize_pool_wei, max_entrants, status,
-              criteria_commitment, rubric_id, case_file, solution_notes
-       FROM missions
-       ORDER BY starts_at DESC`,
+      config.seedDemo
+        ? `SELECT id, on_chain_id, region_id, title, public_brief, duration, starts_at, ends_at,
+                entry_fee_wei, prize_pool_wei, max_entrants, status,
+                criteria_commitment, rubric_id, case_file, solution_notes
+         FROM missions
+         ORDER BY starts_at DESC`
+        : `SELECT id, on_chain_id, region_id, title, public_brief, duration, starts_at, ends_at,
+                entry_fee_wei, prize_pool_wei, max_entrants, status,
+                criteria_commitment, rubric_id, case_file, solution_notes
+         FROM missions
+         WHERE on_chain_id IS NOT NULL
+         ORDER BY starts_at DESC`,
     );
     const out: Record<string, unknown>[] = [];
     for (const row of rows) {

@@ -155,6 +155,62 @@ export async function registerAgentCard(card: {
   }
 }
 
+export async function syncAgentPackage(input: {
+  tokenId: string;
+  ownerAddress: string;
+  publicCard: {
+    name: string;
+    codename: string;
+    archetype: string;
+    portraitId: string;
+    publicSummary: string;
+    level?: number;
+    xp?: number;
+    missionCount?: number;
+    winRate?: number;
+  };
+  privateIntel: {
+    personality: string;
+    skills: Record<string, number>;
+    behaviorRules: string[];
+    memoryDigest: string;
+  };
+}): Promise<{
+  encryptedURI: string;
+  metadataHash: string;
+  txHash: string;
+  storageRoot: string;
+}> {
+  const res = await fetch(
+    `${API_URL}/agents/${encodeURIComponent(input.tokenId)}/sync`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ownerAddress: input.ownerAddress,
+        publicCard: input.publicCard,
+        privateIntel: input.privateIntel,
+      }),
+    },
+  );
+  const body = (await res.json().catch(() => ({}))) as {
+    error?: string;
+    encryptedURI?: string;
+    metadataHash?: string;
+    txHash?: string;
+    storageRoot?: string;
+  };
+  if (!res.ok) {
+    throw new Error(body.error ?? `sync_failed_${res.status}`);
+  }
+  return {
+    encryptedURI: String(body.encryptedURI),
+    metadataHash: String(body.metadataHash),
+    txHash: String(body.txHash),
+    storageRoot: String(body.storageRoot),
+  };
+}
+
 export async function sealAgentIntel(intel: unknown): Promise<{
   rootHash: string;
   backend?: string;

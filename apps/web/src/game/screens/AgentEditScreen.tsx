@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAccount } from "wagmi";
 import { COPY, SKILL_LABELS, type SkillKey } from "@/lib/copy";
 import {
   ARCHETYPES,
@@ -15,6 +16,7 @@ import {
 } from "../lib/wordBudget";
 import { useUiStore } from "../stores/uiStore";
 import { useSquadStore } from "../stores/squadStore";
+import { useSyncAgent } from "../hooks/useChainActions";
 import { SKILL_KEYS, SKILL_POINT_BUDGET, type AgentEditTab } from "../types";
 
 const TABS: Array<{ id: AgentEditTab; label: string }> = [
@@ -33,6 +35,8 @@ export function AgentEditScreen() {
     s.agents.find((a) => a.id === agentId),
   );
   const updateAgent = useSquadStore((s) => s.updateAgent);
+  const { isConnected } = useAccount();
+  const { syncAgent, status: syncStatus, busy: syncBusy } = useSyncAgent();
 
   const [rulesText, setRulesText] = useState<string | null>(null);
 
@@ -95,17 +99,60 @@ export function AgentEditScreen() {
           <h2 className="panel-title">Edit · {agent.codename}</h2>
           <p className="panel-sub" style={{ marginBottom: 0 }}>
             Train skills and standing rules. Personality stays locked from hire.
+            Local edits stay on the desk until you publish the dossier.
             {!agent.onChain && ` · ${COPY.localDesk}`}
           </p>
         </div>
-        <button
-          type="button"
-          className="btn secondary"
-          onClick={() => setScreen("squad")}
-        >
-          Done
-        </button>
+        <div className="action-row">
+          {agent.dossierNumber && (
+            <button
+              type="button"
+              className="btn"
+              disabled={
+                syncBusy ||
+                !isConnected ||
+                rulesUsed > rulesMax ||
+                remaining < 0
+              }
+              onClick={() => {
+                if (rulesText != null) {
+                  if (countWords(rulesText) > rulesMax) return;
+                  const rules = rulesText
+                    .split("\n")
+                    .map((r) => r.trim())
+                    .filter(Boolean);
+                  updateAgent(agent.id, { behaviorRules: rules });
+                  setRulesText(null);
+                }
+                void syncAgent({
+                  ...agent,
+                  behaviorRules:
+                    rulesText != null
+                      ? rulesText
+                          .split("\n")
+                          .map((r) => r.trim())
+                          .filter(Boolean)
+                      : agent.behaviorRules,
+                });
+              }}
+            >
+              {syncBusy ? "Publishing…" : "Publish dossier"}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setScreen("squad")}
+          >
+            Done
+          </button>
+        </div>
       </div>
+      {syncStatus && (
+        <p className="empty-note" style={{ marginTop: "0.5rem" }}>
+          {syncStatus}
+        </p>
+      )}
 
       <div className="tabs" style={{ marginTop: "1rem" }}>
         {TABS.map((t) => (

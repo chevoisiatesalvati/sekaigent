@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { fetchMission, regionName, type MissionListItem } from "@/lib/api";
+import {
+  fetchMission,
+  missionChainId,
+  regionName,
+  type MissionListItem,
+} from "@/lib/api";
 import {
   COPY,
   durationLabel,
@@ -98,6 +103,8 @@ export function BriefScreen() {
     ? marks[activeDoc.id]
     : undefined;
   const canStartOrders = signals.length >= 1 && signals.length <= 4;
+  const liveChainId = missionChainId(mission);
+  const canSealOnChain = liveChainId != null;
 
   function applyMark(mark: PageMark) {
     if (!activeDoc) return;
@@ -281,13 +288,24 @@ export function BriefScreen() {
                 No free operatives — wait for a return or hire another.
               </p>
             )}
+            {!canSealOnChain && (
+              <p className="empty-note">
+                This case has no on-chain mission id. Create a live case in
+                Bureau before sealing orders.
+              </p>
+            )}
             {!canStartOrders && (
               <p className="empty-note">{COPY.needSignalToBrief}</p>
             )}
             <button
               type="button"
               className="btn"
-              disabled={!selected || !isConnected || !canStartOrders}
+              disabled={
+                !selected ||
+                !isConnected ||
+                !canStartOrders ||
+                !canSealOnChain
+              }
               onClick={startOrders}
             >
               {COPY.deployCta}

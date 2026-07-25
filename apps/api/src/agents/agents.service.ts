@@ -1,12 +1,19 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { MemoryStorage, OgStorageClient } from "@sekaigent/sdk";
+import { keccak256, stringToHex, type Hex } from "viem";
 import { getPool } from "../db/pool.js";
 import { config } from "../config.js";
-import { createOgPublicClient, sekaiAgentAbi } from "../chain/og-chain.js";
+import {
+  createOgPublicClient,
+  createOgWalletClient,
+  sekaiAgentAbi,
+} from "../chain/og-chain.js";
 import {
   parsePrivateIntel,
   parsePublicCard,
   type AgentPrivateIntelPayload,
+  type AgentPublicCardPayload,
+  type AgentStoragePackage,
 } from "./agent-package.js";
 
 const MAX_SCAN_TOKENS = 64;
@@ -220,6 +227,113 @@ export class AgentsService {
       metadataHash,
       ownerAddress,
       source: "stub",
+    };
+  }
+
+  /**
+   * Owner-requested sync: reseal v1 package to 0G Storage, then admin
+   * updateMetadata so NFT.encryptedURI points at the new root.
+   */
+  async syncPackage(input: {
+    tokenId: string;
+    ownerAddress: string;
+    publicCard: AgentPublicCardPayload;
+    privateIntel: AgentPrivateIntelPayload;
+  }): Promise<{
+    encryptedURI: string;
+    metadataHash: Hex;
+    txHash: Hex;
+    storageRoot: string;
+  }> {
+    if (!config.adminPrivateKey) {
+      throw new Error("ADMIN_PRIVATE_KEY unset");
+    }
+    const storageKey = config.storagePrivateKey ?? config.adminPrivateKey;
+    if (!storageKey) {
+      throw new Error("STORAGE_PRIVATE_KEY unset");
+    }
+
+    const tokenId = BigInt(input.tokenId);
+    const publicClient = createOgPublicClient();
+    const owner = (await publicClient.readContract({
+      address: config.sekaiAgentAddress,
+      abi: sekaiAgentAbi,
+      functionName: "ownerOf",
+      args: [tokenId],
+    })) as string;
+    if (owner.toLowerCase() !== input.ownerAddress.toLowerCase()) {
+      throw new Error("not_token_owner");
+    }
+
+    const publicCard: AgentPublicCardPayload = {
+      ...input.publicCard,
+      name: input.publicCard.name.trim(),
+      codename: input.publicCard.codename.trim().toUpperCase(),
+      portraitId: input.publicCard.portraitId || "inf-01",
+      publicSummary: input.publicCard.publicSummary?.trim() || "Classified.",
+    };
+    const packagePayload: AgentStoragePackage = {
+      version: 1,
+      publicCard,
+      privateIntel: input.privateIntel,
+    };
+
+    const uploaded = await this.og.putSealedJson(
+      packagePayload,
+      config.agentSealPassword,
+      storageKey,
+    );
+    const encryptedURI = uploaded.rootHash.startsWith("0g://")
+      ? uploaded.rootHash
+      : `0g://${uploaded.rootHash}`;
+    const metadataHash = keccak256(
+      stringToHex(JSON.stringify(publicCard)),
+    ) as Hex;
+
+    const wallet = createOgWalletClient(config.adminPrivateKey);
+    const txHash = await wallet.writeContract({
+      address: config.sekaiAgentAddress,
+      abi: sekaiAgentAbi,
+      functionName: "updateMetadata",
+      args: [tokenId, encryptedURI, metadataHash],
+      account: wallet.account!,
+      chain: wallet.chain,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+    });
+
+    await this.upsertCard({
+      tokenId: input.tokenId,
+      ownerAddress: input.ownerAddress.toLowerCase(),
+      name: publicCard.name,
+      codename: publicCard.codename,
+      archetype: publicCard.archetype,
+      portraitId: publicCard.portraitId,
+      publicSummary: publicCard.publicSummary,
+      level: publicCard.level ?? 1,
+      xp: publicCard.xp ?? 0,
+      missionCount: publicCard.missionCount ?? 0,
+      winRate: publicCard.winRate ?? 0,
+      encryptedURI,
+      metadataHash,
+      skills: input.privateIntel.skills,
+      personality: input.privateIntel.personality,
+      behaviorRules: input.privateIntel.behaviorRules,
+      memoryDigest: input.privateIntel.memoryDigest,
+      source: "storage",
+    });
+
+    this.failUntil.delete(encryptedURI);
+    this.logger.log(
+      `synced token ${input.tokenId} uri=${encryptedURI} tx=${receipt.transactionHash}`,
+    );
+
+    return {
+      encryptedURI,
+      metadataHash,
+      txHash: receipt.transactionHash,
+      storageRoot: uploaded.rootHash,
     };
   }
 

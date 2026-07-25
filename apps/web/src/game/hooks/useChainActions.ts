@@ -17,10 +17,12 @@ import {
   registerAgentCard,
   sealAgentIntel,
   sealPlayToStorage,
+  syncAgentPackage,
   USE_MOCKS,
   type MissionListItem,
 } from "@/lib/api";
 import type { MissionPlayDraft, SquadAgent } from "../types";
+import { countWords, standingRulesWordMax } from "../lib/wordBudget";
 
 /**
  * Attempt on-chain mint when wallet has minter role.
@@ -262,4 +264,72 @@ export function useSealOnChain() {
   }
 
   return { sealOnChain, status };
+}
+
+/** Reseal agent package to 0G Storage + admin updateMetadata via Nest. */
+export function useSyncAgent() {
+  const { address, chainId } = useAccount();
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function syncAgent(agent: SquadAgent): Promise<{
+    encryptedURI: string;
+    txHash: string;
+  } | null> {
+    if (!address || chainId !== OG_CHAIN_ID) {
+      setStatus("Connect wallet on 0G Mainnet to publish.");
+      return null;
+    }
+    if (!agent.dossierNumber) {
+      setStatus("No on-chain dossier — hire/mint first.");
+      return null;
+    }
+    const rulesMax = standingRulesWordMax(agent.level);
+    const rulesWords = countWords(agent.behaviorRules.join("\n"));
+    if (rulesWords > rulesMax) {
+      setStatus(`Standing rules over word budget (${rulesWords}/${rulesMax}).`);
+      return null;
+    }
+    setBusy(true);
+    setStatus("Publishing dossier to 0G Storage…");
+    try {
+      const result = await syncAgentPackage({
+        tokenId: agent.dossierNumber,
+        ownerAddress: address,
+        publicCard: {
+          name: agent.name,
+          codename: agent.codename,
+          archetype: agent.archetype,
+          portraitId: agent.portraitId,
+          publicSummary: agent.publicSummary,
+          level: agent.level,
+          xp: agent.xp,
+          missionCount: agent.missionCount,
+          winRate: agent.winRate,
+        },
+        privateIntel: {
+          personality: agent.personality,
+          skills: agent.skills,
+          behaviorRules: agent.behaviorRules,
+          memoryDigest: agent.memoryDigest,
+        },
+      });
+      setStatus(`Published · ${result.txHash.slice(0, 10)}…`);
+      return {
+        encryptedURI: result.encryptedURI,
+        txHash: result.txHash,
+      };
+    } catch (err) {
+      setStatus(
+        err instanceof Error
+          ? err.message.slice(0, 160)
+          : "Publish failed.",
+      );
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return { syncAgent, status, busy };
 }

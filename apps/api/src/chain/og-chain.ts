@@ -136,4 +136,15 @@ export const sekaiAgentAbi = [
     inputs: [{ name: "tokenId", type: "uint256" }],
     outputs: [{ type: "bytes32" }],
   },
+  {
+    type: "function",
+    name: "updateMetadata",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tokenId", type: "uint256" },
+      { name: "encryptedURI", type: "string" },
+      { name: "metadataHash", type: "bytes32" },
+    ],
+    outputs: [],
+  },
 ] as const;
