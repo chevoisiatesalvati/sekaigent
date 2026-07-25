@@ -169,7 +169,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 | **1.1** | Foundry + mainnet config | Done |
 | **1.2** | SekaiAgent ERC-7857 mint | Done |
 | **1.3** | MissionVault lifecycle | Done |
-| **1.4** | Evaluation settle and payouts | Pending |
+| **1.4** | Evaluation settle and payouts | Done |
 | **1.5** | Mainnet deploy scripts | Pending |
 
 ### Phase 2 — Backend API
@@ -259,3 +259,8 @@ Unit tests cover mint metadata getters and non-minter revert.
 
 Implemented MissionVault create/accept/submit/reveal with criteria commitment checks and fee pool accounting.
 Lifecycle tests cover prize pool growth, reveal mismatch revert, and single play submission.
+
+### 1.4 — Done
+
+Added postEvaluation, settle with top-10 and small-field payout BPS, pause, and EVALUATOR_RELAYER role.
+Settle tests cover 3-entrant 50/30/20 split, tie-break by submit time, 5-entrant renormalization, and pause.

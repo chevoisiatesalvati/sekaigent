@@ -52,7 +52,12 @@ Unit tests cover mint metadata getters and non-minter revert.
 Implemented MissionVault create/accept/submit/reveal with criteria commitment checks and fee pool accounting.
 Lifecycle tests cover prize pool growth, reveal mismatch revert, and single play submission.
 
-### 1.4–1.5 — Pending
+### 1.4 — Done
+
+Added postEvaluation, settle with top-10 and small-field payout BPS, pause, and EVALUATOR_RELAYER role.
+Settle tests cover 3-entrant 50/30/20 split, tie-break by submit time, 5-entrant renormalization, and pause.
+
+### 1.5 — Pending
 
 ## Phase 2 — Backend API
 
