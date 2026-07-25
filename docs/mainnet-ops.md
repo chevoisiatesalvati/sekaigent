@@ -26,14 +26,29 @@ Verify on https://chainscan.0g.ai.
 
 ## 5.2 Mint first agent
 
-Upload sealed private intel via `@sekaigent/sdk` `OgStorageClient.putSealedJson` (requires key), then:
+**Source of truth (plan + ERC-7857):** seal an agent package to 0G Storage, then mint with that URI.
+
+```ts
+// sealed at NFT.encryptedURI
+{
+  version: 1,
+  publicCard: { name, codename, archetype, portraitId, publicSummary, … },
+  privateIntel: { personality, skills, behaviorRules, memoryDigest }
+}
+// on-chain metadataHash = keccak256(JSON.stringify(publicCard))
+```
+
+Web recruit does this via `POST /storage/seal-agent` → `SekaiAgent.mint(to, encryptedURI, metadataHash)`.  
+`GET /agents/owned` opens `encryptedURI` with `AGENT_SEAL_PASSWORD` (Postgres `agent_cards` is cache only).
+
+Legacy one-shot script (set URI after upload):
 
 ```bash
 export AGENT_ENCRYPTED_URI="0g://<rootHash>"
 node scripts/mint-agent.mjs
 ```
 
-Register public card against ERC-8004 Identity Registry `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`.
+Optional: register public discoverability on ERC-8004 Identity Registry `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`.
 
 ## 5.3 Accept + play
 

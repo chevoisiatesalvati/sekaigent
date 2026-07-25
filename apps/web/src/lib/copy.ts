@@ -44,10 +44,10 @@ export const REGION_LORE: Record<string, string> = {
 
 export const COPY = {
   brandTagline: "Masters of secret agents on 0G",
-  commandTitle: "Command",
+  commandTitle: "Bureau Ops",
   commandLead:
-    "Hire and train operatives, then send them into open cases.",
-  hqHeadline: "Hire and train operatives. Then open a case.",
+    "Create live cases, attach dossiers, and reveal criteria after the deadline.",
+  hqHeadline: "Bureau Ops — author and reveal cases.",
   hqCtaSquad: "Open squad",
   hqCtaMissions: "Open cases",
   hqCtaHire: "Hire an operative",

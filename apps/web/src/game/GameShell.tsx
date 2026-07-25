@@ -25,7 +25,7 @@ const RAIL: Array<{ id: GameScreen; label: string; glyph: string }> = [
   { id: "squad", label: "Squad", glyph: "◆" },
   { id: "map", label: "Cases", glyph: "◎" },
   { id: "field", label: "Field", glyph: "▣" },
-  { id: "hq", label: "Command", glyph: "◈" },
+  { id: "hq", label: "Bureau", glyph: "◈" },
 ];
 
 const screenMotion = {
