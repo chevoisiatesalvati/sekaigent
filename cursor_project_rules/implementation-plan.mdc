@@ -69,7 +69,12 @@ Local forge script dry-run succeeds; mainnet broadcast deferred to Phase 5.
 Bootstrapped NestJS API with Postgres schema (missions/entrants/plays/evaluations/events) and docker-compose.
 Migrations apply via PGlite locally when Docker is unavailable; health endpoint module builds clean.
 
-### 2.2–2.4 — Pending
+### 2.2 — Done
+
+Added admin-guarded mission authoring with criteria commitment matching Solidity abi.encodePacked.
+Commitment helper verified against cast keccak; create mission returns commitment for on-chain createMission.
+
+### 2.3–2.4 — Pending
 
 ## Phase 3 — Play + Eval
 
