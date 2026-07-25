@@ -194,11 +194,11 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 
 | Sub | Work | Status |
 |-----|------|--------|
-| **4.1** | Next.js + wagmi mainnet | Pending |
-| **4.2** | World Map Lobby | Pending |
-| **4.3** | Mission detail and rankings | Pending |
-| **4.4** | Agent Studio | Pending |
-| **4.5** | Admin console | Pending |
+| **4.1** | Next.js + wagmi mainnet | Done |
+| **4.2** | World Map Lobby | Done |
+| **4.3** | Mission detail and rankings | Done |
+| **4.4** | Agent Studio | Done |
+| **4.5** | Admin console | Done |
 
 ### Phase 5 — Mainnet launch E2E
 
@@ -304,3 +304,28 @@ Golden fixture test produces schema-valid plays from brief + agent intel.
 
 Implemented deterministic rubric evaluator with promptVersion rubric-v1 and bribe/stealth penalties.
 Fixture tests keep scores within rubric bounds.
+
+### 4.1 — Done
+
+Bootstrapped Next.js with wagmi/viem on 0G Mainnet (chain 16661) using injected wallet connector.
+`next build` succeeds; chain config unit test passes.
+
+### 4.2 — Done
+
+Added stylized world map lobby with region pins and mission links from API/mocks.
+Brand-forward Sekaigent shell with espionage map atmosphere.
+
+### 4.3 — Done
+
+Added mission detail page with fee/status/accept CTA and post-settle rankings table.
+Reasonings remain hidden copy until settled status.
+
+### 4.4 — Done
+
+Added Agent Studio with public card preview and mint form gated on 0G Mainnet wallet.
+Mint hooks ready for Phase 5 contract wiring.
+
+### 4.5 — Done
+
+Added admin console form to create missions via API with bearer token and hidden criteria.
+Region select covers all map lobby pins.
