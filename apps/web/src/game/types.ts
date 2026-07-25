@@ -28,9 +28,11 @@ export type SquadAgent = {
   winRate: number;
   skills: Record<SkillKey, number>;
   personality: string;
+  personalityPresetId?: string;
   behaviorRules: string[];
   memoryDigest: string;
   dossierNumber?: string;
+  onChain?: boolean;
   createdAt: number;
 };
 
@@ -40,6 +42,10 @@ export type FieldDeployment = {
   status: "sealing" | "in_field" | "debriefed";
   deployedAt: number;
   playDraft?: MissionPlayDraft;
+  playHash?: string;
+  acceptTxHash?: string;
+  submitTxHash?: string;
+  chainError?: string;
 };
 
 export type MissionPlayDraft = {

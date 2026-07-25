@@ -20,7 +20,8 @@ export function FieldScreen() {
     <div className="screen-scroll">
       <h2 className="panel-title">{COPY.fieldStatus}</h2>
       <p className="panel-sub">
-        Active seals and recent returns. Chain settle wiring comes later.
+        Sealed orders waiting on debrief. Chain receipts show when a live
+        mission id and dossier were used.
       </p>
 
       <div className="panel" style={{ marginBottom: "1rem" }}>
@@ -34,7 +35,13 @@ export function FieldScreen() {
             const mission = MOCK_MISSIONS.find((m) => m.id === d.missionId);
             return (
               <li key={d.missionId}>
-                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    alignItems: "center",
+                  }}
+                >
                   {agent && (
                     <img
                       src={agentPortraitSrc(agent)}
@@ -48,9 +55,8 @@ export function FieldScreen() {
                     <strong>{agent?.codename ?? "Operative"}</strong>
                     <div className="empty-note">
                       {mission?.title ?? d.missionId}
-                      {mission
-                        ? ` · ${regionName(mission.region_id)}`
-                        : ""}
+                      {mission ? ` · ${regionName(mission.region_id)}` : ""}
+                      {d.playHash ? ` · sealed` : ""}
                     </div>
                   </div>
                 </div>
@@ -59,7 +65,7 @@ export function FieldScreen() {
                   className="btn secondary"
                   onClick={() => openBrief(d.missionId)}
                 >
-                  Brief
+                  Case
                 </button>
               </li>
             );
@@ -71,7 +77,7 @@ export function FieldScreen() {
           style={{ marginTop: "0.75rem" }}
           onClick={() => setScreen("map")}
         >
-          Open map
+          Open cases
         </button>
       </div>
 

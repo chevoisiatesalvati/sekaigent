@@ -2,123 +2,74 @@
 
 import { COPY } from "@/lib/copy";
 import { useUiStore } from "../stores/uiStore";
-import { agentPortraitSrc, useSquadStore } from "../stores/squadStore";
+import { useSquadStore } from "../stores/squadStore";
 import { useFieldStore } from "../stores/fieldStore";
-import { MOCK_MISSIONS, regionName } from "@/lib/api";
+import { MOCK_MISSIONS } from "@/lib/api";
 
+/** Command hub — one primary next action for the game loop. */
 export function HqScreen() {
   const setScreen = useUiStore((s) => s.setScreen);
-  const openBrief = useUiStore((s) => s.openBrief);
   const agents = useSquadStore((s) => s.agents);
   const deployments = useFieldStore((s) => s.deployments);
   const active = deployments.filter((d) => d.status === "in_field");
-  const openMissions = MOCK_MISSIONS.filter((m) => m.status === "open").slice(
-    0,
-    2,
-  );
-  const spotlight = agents[0];
+  const openCases = MOCK_MISSIONS.filter((m) => m.status === "open");
+
+  let primaryLabel: string = COPY.hqCtaHire;
+  let primaryAction = () => setScreen("recruit");
+  let lead = "You need an operative before you can open a case.";
+
+  if (agents.length === 0) {
+    primaryLabel = COPY.hqCtaHire;
+    primaryAction = () => setScreen("recruit");
+    lead = "Hire and train an operative first. Cases come after.";
+  } else if (active.length > 0) {
+    primaryLabel = COPY.hqCtaField;
+    primaryAction = () => setScreen("field");
+    lead =
+      "You have people in the field. Check deployments, then open another case.";
+  } else if (openCases.length > 0) {
+    primaryLabel = COPY.hqCtaCases;
+    primaryAction = () => setScreen("map");
+    lead = "Squad ready. Study an open case, write orders, seal.";
+  } else {
+    primaryLabel = COPY.hqCtaSquad;
+    primaryAction = () => setScreen("squad");
+    lead = "Train your squad while you wait for the next case.";
+  }
 
   return (
-    <div className="screen-pad">
-      <div className="hq-hero">
-        <div>
-          <p className="panel-sub" style={{ marginBottom: "0.35rem" }}>
-            Operations desk
-          </p>
-          <h2 className="hq-title">Sekaigent</h2>
-          <p className="hq-lead">{COPY.hqHeadline}</p>
-          <div className="action-row">
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setScreen("squad")}
-            >
-              {COPY.hqCtaSquad}
-            </button>
-            <button
-              type="button"
-              className="btn secondary"
-              onClick={() => setScreen("map")}
-            >
-              {COPY.hqCtaMissions}
-            </button>
-          </div>
-          <div className="panel" style={{ marginTop: "1.5rem" }}>
-            <h3 className="panel-title">Open windows</h3>
-            <ul className="list-quiet">
-              {openMissions.map((m) => (
-                <li key={m.id}>
-                  <div>
-                    <strong>{m.title}</strong>
-                    <div className="empty-note">{regionName(m.region_id)}</div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={() => openBrief(m.id)}
-                  >
-                    Brief
-                  </button>
-                </li>
-              ))}
-              {openMissions.length === 0 && (
-                <li className="empty-note">No open missions.</li>
-              )}
-            </ul>
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div className="panel" style={{ flex: 1 }}>
-            <h3 className="panel-title">Squad spotlight</h3>
-            {spotlight ? (
-              <>
-                <img
-                  src={agentPortraitSrc(spotlight)}
-                  alt={spotlight.codename}
-                  width={120}
-                  height={120}
-                  style={{
-                    borderRadius: 8,
-                    marginBottom: "0.75rem",
-                    display: "block",
-                  }}
-                />
-                <strong>{spotlight.codename}</strong>
-                <p className="panel-sub" style={{ marginTop: "0.35rem" }}>
-                  {spotlight.publicSummary}
-                </p>
-              </>
-            ) : (
-              <p className="empty-note">{COPY.squadEmpty}</p>
-            )}
-          </div>
-          <div className="panel">
-            <h3 className="panel-title">{COPY.inTheField}</h3>
-            <ul className="list-quiet">
-              {active.length === 0 && (
-                <li className="empty-note">No active deployments.</li>
-              )}
-              {active.map((d) => {
-                const agent = agents.find((a) => a.id === d.agentId);
-                return (
-                  <li key={d.missionId}>
-                    <span>
-                      {agent?.codename ?? "Operative"} · {d.missionId}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn ghost"
-                      onClick={() => setScreen("field")}
-                    >
-                      Field
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
+    <div className="screen-pad command-pad">
+      <p className="panel-sub" style={{ marginBottom: "0.35rem" }}>
+        {COPY.commandTitle}
+      </p>
+      <h2 className="hq-title">Sekaigent</h2>
+      <p className="hq-lead">{lead}</p>
+      <div className="action-row">
+        <button type="button" className="btn" onClick={primaryAction}>
+          {primaryLabel}
+        </button>
+        {agents.length > 0 && (
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setScreen("squad")}
+          >
+            {COPY.hqCtaSquad}
+          </button>
+        )}
+        {agents.length > 0 && (
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setScreen("map")}
+          >
+            {COPY.hqCtaCases}
+          </button>
+        )}
       </div>
+      <p className="empty-note" style={{ marginTop: "1.5rem", maxWidth: "28rem" }}>
+        {COPY.commandLead}
+      </p>
     </div>
   );
 }

@@ -1,6 +1,10 @@
 "use client";
 
 import { COPY } from "@/lib/copy";
+import {
+  countMissionOrdersWords,
+  missionOrdersWordMax,
+} from "../lib/wordBudget";
 import { useUiStore } from "../stores/uiStore";
 import { useLoadoutStore } from "../stores/loadoutStore";
 import { useSquadStore } from "../stores/squadStore";
@@ -28,7 +32,7 @@ export function LoadoutScreen() {
   if (!missionId || !draft || !agent) {
     return (
       <div className="screen-pad">
-        <p className="empty-note">Start deploy from a briefing first.</p>
+        <p className="empty-note">Start from a case file first.</p>
         <button
           type="button"
           className="btn secondary"
@@ -39,6 +43,10 @@ export function LoadoutScreen() {
       </div>
     );
   }
+
+  const maxWords = missionOrdersWordMax(agent.level);
+  const used = countMissionOrdersWords(draft);
+  const overBudget = used > maxWords;
 
   function updateStep(
     index: number,
@@ -70,22 +78,35 @@ export function LoadoutScreen() {
         className="btn ghost"
         onClick={() => openBrief(missionId)}
       >
-        ← Brief
+        ← Case file
       </button>
       <h2 className="panel-title" style={{ marginTop: "0.5rem" }}>
-        Mission loadout · {agent.codename}
+        {COPY.ordersTitle} · {agent.codename}
       </h2>
       <p className="panel-sub">
-        Mission-specific behaviour. Standing rules:{" "}
+        Write orders that prove you read the dossier. Standing rules:{" "}
         {agent.behaviorRules.slice(0, 2).join(" · ") || "none set"}.
       </p>
 
       <div className="panel">
+        <div className={`word-meter${overBudget ? " over" : ""}`}>
+          <span>Order word budget (level {agent.level})</span>
+          <strong>
+            {used} / {maxWords}
+          </strong>
+        </div>
+        <p className="empty-note" style={{ marginBottom: "0.85rem" }}>
+          Counts approach, step details, risks, resources, contingencies, and
+          claim. Step names (Recon / Execute / …) are free. Budget: 50 words at
+          level 1, +10 per level.
+        </p>
+
         <div className="field">
           <label htmlFor="approach">Approach</label>
           <textarea
             id="approach"
             value={draft.approach}
+            placeholder="How will they work this case? Pull signal from the dossier."
             onChange={(e) => setDraft({ approach: e.target.value })}
           />
         </div>
@@ -180,6 +201,7 @@ export function LoadoutScreen() {
             type="button"
             className="btn"
             disabled={
+              overBudget ||
               draft.steps.length < 3 ||
               !draft.approach.trim() ||
               !draft.finalOutcomeClaim.trim()
@@ -190,7 +212,7 @@ export function LoadoutScreen() {
           </button>
         </div>
         <p className="empty-note" style={{ marginTop: "0.75rem" }}>
-          Sealed locally until chain wiring. {COPY.fieldPlanSealed}
+          {COPY.fieldPlanSealed}
         </p>
       </div>
     </div>

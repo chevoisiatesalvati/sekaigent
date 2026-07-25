@@ -9,12 +9,19 @@ export type CreateMissionInput = {
   regionId: string;
   title: string;
   publicBrief: string;
+  caseFile?: Array<{
+    id: string;
+    kind: string;
+    title: string;
+    body: string;
+  }>;
   duration: "daily" | "weekly" | "monthly";
   startsAt: string;
   endsAt: string;
   entryFeeWei: string;
   maxEntrants: number;
   hiddenCriteria: string;
+  solutionNotes?: string;
   salt: string;
   rubricId?: string;
 };
@@ -34,9 +41,10 @@ export class MissionsService {
       `INSERT INTO missions (
         id, region_id, title, public_brief, duration,
         starts_at, ends_at, entry_fee_wei, prize_pool_wei, max_entrants,
-        status, criteria_commitment, rubric_id, hidden_criteria, salt
+        status, criteria_commitment, rubric_id, hidden_criteria, salt,
+        case_file, solution_notes
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,'0',$9,'scheduled',$10,$11,$12,$13
+        $1,$2,$3,$4,$5,$6,$7,$8,'0',$9,'scheduled',$10,$11,$12,$13,$14::jsonb,$15
       )`,
       [
         id,
@@ -52,6 +60,8 @@ export class MissionsService {
         rubricId,
         input.hiddenCriteria,
         input.salt,
+        JSON.stringify(input.caseFile ?? []),
+        input.solutionNotes ?? null,
       ],
     );
 
@@ -68,7 +78,7 @@ export class MissionsService {
     const { rows } = await pool.query(
       `SELECT id, region_id, title, public_brief, duration, starts_at, ends_at,
               entry_fee_wei, prize_pool_wei, max_entrants, status,
-              criteria_commitment, rubric_id
+              criteria_commitment, rubric_id, case_file, solution_notes
        FROM missions
        ORDER BY starts_at DESC`,
     );
@@ -90,8 +100,11 @@ export class MissionsService {
       [id],
     );
     if (evals.length > 0) {
+      const mission = await this.getMission(id);
       return {
         missionId: id,
+        revealedCriteria: mission?.hidden_criteria ?? undefined,
+        solutionNotes: mission?.solution_notes ?? undefined,
         rankings: evals.map((row, index) => ({
           rank: index + 1,
           agentTokenId: row.agent_token_id,

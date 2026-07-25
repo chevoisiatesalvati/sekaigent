@@ -8,14 +8,18 @@ import {
   portraitsForArchetype,
   type Archetype,
 } from "@/lib/portraits";
+import { PERSONALITY_PRESETS } from "@/lib/personalities";
 import { useUiStore } from "../stores/uiStore";
 import { useSquadStore } from "../stores/squadStore";
+import { useMintAgent } from "../hooks/useChainActions";
 
 export function RecruitScreen() {
   const { isConnected, chainId } = useAccount();
   const setScreen = useUiStore((s) => s.setScreen);
   const openAgentEdit = useUiStore((s) => s.openAgentEdit);
   const recruit = useSquadStore((s) => s.recruit);
+  const updateAgent = useSquadStore((s) => s.updateAgent);
+  const { mintIfPossible, status: mintStatus } = useMintAgent();
 
   const [name, setName] = useState("");
   const [codename, setCodename] = useState("");
@@ -23,8 +27,8 @@ export function RecruitScreen() {
   const [portraitId, setPortraitId] = useState(
     () => portraitsForArchetype("Infiltrator")[0]?.id ?? "",
   );
-  const [personality, setPersonality] = useState(
-    "Professional, adaptable, loyal to the desk.",
+  const [personalityPresetId, setPersonalityPresetId] = useState(
+    PERSONALITY_PRESETS[0]?.id ?? "",
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -41,11 +45,15 @@ export function RecruitScreen() {
     if (first) setPortraitId(first.id);
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (!walletOk) {
       setError(COPY.connectWallet);
+      return;
+    }
+    if (!personalityPresetId) {
+      setError("Choose a personality.");
       return;
     }
     try {
@@ -54,11 +62,18 @@ export function RecruitScreen() {
         codename,
         archetype,
         portraitId,
-        personality,
+        personalityPresetId,
       });
+      const minted = await mintIfPossible(agent);
+      if (minted?.tokenId) {
+        updateAgent(agent.id, {
+          dossierNumber: minted.tokenId,
+          onChain: true,
+        });
+      }
       openAgentEdit(agent.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Recruit failed.");
+      setError(err instanceof Error ? err.message : "Hire failed.");
     }
   }
 
@@ -75,7 +90,9 @@ export function RecruitScreen() {
         <div>
           <h2 className="panel-title">{COPY.recruitTitle}</h2>
           <p className="panel-sub" style={{ marginBottom: 0 }}>
-            Local roster mint — chain mint comes later. Wallet required.
+            Pick a personality at hire — it locks for the operative. Wallet
+            required. On-chain mint runs when the minter role is available;
+            otherwise the desk stays local.
           </p>
         </div>
         <button
@@ -145,14 +162,25 @@ export function RecruitScreen() {
           </div>
         </div>
         <div className="field">
-          <label htmlFor="r-pers">Personality</label>
-          <textarea
-            id="r-pers"
-            value={personality}
-            onChange={(e) => setPersonality(e.target.value)}
-          />
+          <label>Personality (required)</label>
+          <div className="personality-grid">
+            {PERSONALITY_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={`personality-opt${
+                  personalityPresetId === p.id ? " selected" : ""
+                }`}
+                onClick={() => setPersonalityPresetId(p.id)}
+              >
+                <strong>{p.name}</strong>
+                <span>{p.personality}</span>
+              </button>
+            ))}
+          </div>
         </div>
         {error && <p className="empty-note">{error}</p>}
+        {mintStatus && <p className="empty-note">{mintStatus}</p>}
         <button type="submit" className="btn" disabled={!walletOk}>
           {COPY.recruitCta}
         </button>

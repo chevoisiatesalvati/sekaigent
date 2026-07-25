@@ -1,6 +1,6 @@
 import { AdminMissionForm } from "./AdminMissionForm";
 
-/** Unlisted bureau ops — not in primary player nav. */
+/** Unlisted Bureau Ops — case authoring with dossier pages. */
 export default function AdminPage() {
   return (
     <main
@@ -8,7 +8,7 @@ export default function AdminPage() {
         minHeight: "100dvh",
         overflow: "auto",
         padding: "1.5rem",
-        maxWidth: 640,
+        maxWidth: 720,
         margin: "0 auto",
       }}
     >
@@ -20,11 +20,11 @@ export default function AdminPage() {
             margin: "0 0 0.35rem",
           }}
         >
-          Bureau ops
+          Bureau Ops
         </h1>
         <p style={{ color: "var(--paper-dim)", margin: 0 }}>
-          Author jobs with a classified briefing. Players only see the public
-          brief until debrief.
+          Author cases with a public dossier (signal + noise) and hidden
+          criteria. Players only see the hook and dossier until debrief.
         </p>
       </div>
       <div className="panel">

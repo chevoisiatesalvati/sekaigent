@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
 import { AnimatePresence, motion } from "framer-motion";
 import { WalletButton } from "@/components/WalletButton";
@@ -21,10 +21,10 @@ import { FieldScreen } from "./screens/FieldScreen";
 import { DebriefScreen } from "./screens/DebriefScreen";
 
 const RAIL: Array<{ id: GameScreen; label: string; glyph: string }> = [
-  { id: "hq", label: "HQ", glyph: "◈" },
   { id: "squad", label: "Squad", glyph: "◆" },
-  { id: "map", label: "Map", glyph: "◎" },
+  { id: "map", label: "Cases", glyph: "◎" },
   { id: "field", label: "Field", glyph: "▣" },
+  { id: "hq", label: "Command", glyph: "◈" },
 ];
 
 const screenMotion = {
@@ -66,13 +66,29 @@ export function GameShell() {
   const screen = useUiStore((s) => s.screen);
   const setScreen = useUiStore((s) => s.setScreen);
   const hydrateSquad = useSquadStore((s) => s.hydrate);
+  const agents = useSquadStore((s) => s.agents);
+  const hydratedSquad = useSquadStore((s) => s.hydrated);
   const hydrateField = useFieldStore((s) => s.hydrate);
+  const deployments = useFieldStore((s) => s.deployments);
+  const didRoute = useRef(false);
 
   useEffect(() => {
     const key = ownerStorageKey(address);
     hydrateSquad(key);
     hydrateField(key);
+    didRoute.current = false;
   }, [address, hydrateSquad, hydrateField]);
+
+  useEffect(() => {
+    if (!hydratedSquad || didRoute.current) return;
+    didRoute.current = true;
+    if (agents.length === 0) {
+      setScreen("squad");
+      return;
+    }
+    const active = deployments.some((d) => d.status === "in_field");
+    setScreen(active ? "field" : "map");
+  }, [hydratedSquad, agents.length, deployments, setScreen]);
 
   return (
     <div className="game-root">
@@ -110,11 +126,7 @@ export function GameShell() {
         </nav>
         <main className="game-stage">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={screen}
-              className="screen"
-              {...screenMotion}
-            >
+            <motion.div key={screen} className="screen" {...screenMotion}>
               <ScreenRouter screen={screen} />
             </motion.div>
           </AnimatePresence>

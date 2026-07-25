@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
     };
     return config;
   },
+  // Allow importing deployment ABIs from monorepo root
+  experimental: {
+    externalDir: true,
+  },
 };
 
 export default nextConfig;

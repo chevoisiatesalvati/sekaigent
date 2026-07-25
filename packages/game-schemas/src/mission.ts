@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CaseDocumentSchema } from "./case-document.js";
 
 export const MissionDurationSchema = z.enum(["daily", "weekly", "monthly"]);
 
@@ -19,6 +20,7 @@ export const MissionSchema = z.object({
   regionId: z.string().min(1),
   title: z.string().min(1),
   publicBrief: z.string().min(1),
+  caseFile: z.array(CaseDocumentSchema).default([]),
   duration: MissionDurationSchema,
   startsAt: z.number().int().nonnegative(),
   endsAt: z.number().int().positive(),
@@ -30,6 +32,7 @@ export const MissionSchema = z.object({
   rubricId: z.string().min(1),
   hiddenCriteria: z.string().optional(),
   salt: z.string().optional(),
+  solutionNotes: z.string().optional(),
 });
 
 export type MissionDuration = z.infer<typeof MissionDurationSchema>;
