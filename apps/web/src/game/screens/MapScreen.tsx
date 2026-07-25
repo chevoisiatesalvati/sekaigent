@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { COPY, regionLore, statusLabel } from "@/lib/copy";
 import { useUiStore } from "../stores/uiStore";
+import { useSquadStore } from "../stores/squadStore";
 
 const WorldStage = dynamic(
   () => import("../three/WorldStage").then((m) => m.WorldStage),
@@ -21,6 +22,8 @@ export function MapScreen() {
   const openBrief = useUiStore((s) => s.openBrief);
   const openDebrief = useUiStore((s) => s.openDebrief);
   const selectedMissionId = useUiStore((s) => s.selectedMissionId);
+  const setScreen = useUiStore((s) => s.setScreen);
+  const agents = useSquadStore((s) => s.agents);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,8 +58,17 @@ export function MapScreen() {
         <div className="panel">
           <h2 className="panel-title">{COPY.missionsTitle}</h2>
           <p className="panel-sub" style={{ marginBottom: "0.5rem" }}>
-            Click a region pin on the globe. Open windows pulse.
+            {COPY.mapHint}
           </p>
+          {agents.length === 0 && (
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => setScreen("squad")}
+            >
+              {COPY.hqCtaHire}
+            </button>
+          )}
         </div>
         {selected && (
           <div className="panel">

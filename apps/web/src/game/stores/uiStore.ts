@@ -20,7 +20,7 @@ type UiState = {
 };
 
 export const useUiStore = create<UiState>((set) => ({
-  screen: "hq",
+  screen: "squad",
   selectedAgentId: null,
   selectedMissionId: null,
   agentEditTab: "profile",

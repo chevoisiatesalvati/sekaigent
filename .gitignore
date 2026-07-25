@@ -49,6 +49,9 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 
+# Local download scratch
+tmp-assets/
+
 # Foundry
 contracts/cache/
 contracts/out/

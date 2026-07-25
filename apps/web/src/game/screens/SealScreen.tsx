@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { COPY } from "@/lib/copy";
+import { fetchMission, MOCK_MISSIONS } from "@/lib/api";
 import { useUiStore } from "../stores/uiStore";
 import { useLoadoutStore } from "../stores/loadoutStore";
 import { useFieldStore } from "../stores/fieldStore";
+import { useSquadStore } from "../stores/squadStore";
+import { useSealOnChain } from "../hooks/useChainActions";
 
 export function SealScreen() {
   const missionId = useUiStore((s) => s.selectedMissionId);
@@ -14,16 +17,55 @@ export function SealScreen() {
   const draft = useLoadoutStore((s) => s.draft);
   const resetLoadout = useLoadoutStore((s) => s.reset);
   const deploy = useFieldStore((s) => s.deploy);
+  const agent = useSquadStore((s) =>
+    s.agents.find((a) => a.id === agentId),
+  );
+  const { sealOnChain, status } = useSealOnChain();
+  const [error, setError] = useState<string | null>(null);
+  const started = useRef(false);
 
   useEffect(() => {
-    if (!missionId || !agentId || !draft) return;
-    const timer = window.setTimeout(() => {
-      deploy(missionId, agentId, draft);
+    if (started.current) return;
+    if (!missionId || !agentId || !draft || !agent) return;
+    started.current = true;
+    let cancelled = false;
+
+    (async () => {
+      const mission =
+        (await fetchMission(missionId)) ??
+        MOCK_MISSIONS.find((m) => m.id === missionId) ??
+        null;
+      if (!mission || cancelled) return;
+
+      const result = await sealOnChain({ mission, agent, draft });
+      if (cancelled) return;
+      if (result.error) setError(result.error);
+
+      deploy(missionId, agentId, draft, {
+        playHash: result.playHash,
+        acceptTxHash: result.acceptTxHash,
+        submitTxHash: result.submitTxHash,
+        chainError: result.error,
+      });
       resetLoadout();
-      setScreen("field");
-    }, 1800);
-    return () => window.clearTimeout(timer);
-  }, [missionId, agentId, draft, deploy, resetLoadout, setScreen]);
+      window.setTimeout(() => {
+        if (!cancelled) setScreen("field");
+      }, 900);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    missionId,
+    agentId,
+    draft,
+    agent,
+    deploy,
+    resetLoadout,
+    setScreen,
+    sealOnChain,
+  ]);
 
   return (
     <div className="seal-stage">
@@ -42,8 +84,13 @@ export function SealScreen() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
       >
-        {COPY.sealDeploy} — packing field plan…
+        {status ?? `${COPY.sealDeploy} — packing field plan…`}
       </motion.p>
+      {error && (
+        <p className="empty-note" style={{ marginTop: "0.75rem" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

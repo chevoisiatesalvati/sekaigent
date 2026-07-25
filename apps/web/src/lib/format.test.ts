@@ -6,7 +6,7 @@ describe("formatOgFromWei", () => {
   it("formats whole 0G", () => {
     assert.equal(formatOgFromWei("1000000000000000000"), "1 0G");
   });
-  it("formats fractional stake", () => {
+  it("parses fractional mission tax", () => {
     assert.equal(formatOgFromWei("1000000000000000"), "0.001 0G");
   });
   it("formats zero", () => {
@@ -21,7 +21,7 @@ describe("formatWinRate", () => {
 });
 
 describe("formatCountdown", () => {
-  it("handles closed window", () => {
+  it("handles closed deadline", () => {
     assert.equal(
       formatCountdown(new Date(Date.now() - 1000).toISOString()),
       "Window closed",

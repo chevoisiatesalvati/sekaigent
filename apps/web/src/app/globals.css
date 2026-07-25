@@ -375,11 +375,11 @@ a {
 
 .roster-card {
   flex: 0 0 auto;
-  width: 140px;
+  width: 96px;
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(0, 0, 0, 0.28);
-  padding: 0.55rem;
+  padding: 0.4rem;
   cursor: pointer;
   text-align: left;
   transition: border-color 0.2s ease, transform 0.2s ease;
@@ -405,11 +405,11 @@ a {
 
 .roster-card strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
 }
 
 .roster-card span {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   color: var(--paper-dim);
 }
 
@@ -560,11 +560,121 @@ a {
 }
 
 .agent-showcase-wrap {
-  height: 220px;
+  height: 340px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--panel-border);
   background: #0a100e;
+}
+
+.command-pad {
+  justify-content: center;
+  max-width: 40rem;
+}
+
+.dossier-layout {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: 0.75rem;
+  min-height: 14rem;
+}
+
+.dossier-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.dossier-doc-btn {
+  appearance: none;
+  text-align: left;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--paper-dim);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.dossier-doc-btn.active {
+  border-color: var(--signal);
+  color: var(--paper);
+  background: rgba(196, 163, 90, 0.12);
+}
+
+.dossier-body {
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  background: rgba(0, 0, 0, 0.28);
+  max-height: 22rem;
+  overflow: auto;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.dossier-kind {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--signal);
+  margin-bottom: 0.35rem;
+}
+
+.word-meter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--paper-dim);
+  margin-bottom: 0.5rem;
+}
+
+.word-meter.over {
+  color: var(--danger);
+}
+
+.personality-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.personality-opt {
+  appearance: none;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 8px;
+  padding: 0.65rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--paper);
+}
+
+.personality-opt.selected {
+  border-color: var(--signal);
+  background: rgba(196, 163, 90, 0.12);
+}
+
+.personality-opt strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.personality-opt span {
+  font-size: 0.72rem;
+  color: var(--paper-dim);
+  line-height: 1.35;
+}
+
+@media (max-width: 800px) {
+  .dossier-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .rank-table {

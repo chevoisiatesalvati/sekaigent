@@ -1,18 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SKILL_LABELS, type SkillKey } from "@/lib/copy";
+import { COPY, SKILL_LABELS, type SkillKey } from "@/lib/copy";
 import {
   ARCHETYPES,
   PORTRAITS,
   portraitsForArchetype,
   type Archetype,
 } from "@/lib/portraits";
-import { useUiStore } from "../stores/uiStore";
+import { getPersonalityPreset } from "@/lib/personalities";
 import {
-  skillSum,
-  useSquadStore,
-} from "../stores/squadStore";
+  countWords,
+  standingRulesWordMax,
+} from "../lib/wordBudget";
+import { useUiStore } from "../stores/uiStore";
+import { useSquadStore } from "../stores/squadStore";
 import { SKILL_KEYS, SKILL_POINT_BUDGET, type AgentEditTab } from "../types";
 
 const TABS: Array<{ id: AgentEditTab; label: string }> = [
@@ -59,10 +61,13 @@ export function AgentEditScreen() {
     );
   }
 
-  const total = skillSum(agent.skills);
+  const total = Object.values(agent.skills).reduce((a, b) => a + b, 0);
   const remaining = SKILL_POINT_BUDGET - total;
-  const behaviorText =
-    rulesText ?? agent.behaviorRules.join("\n");
+  const behaviorText = rulesText ?? agent.behaviorRules.join("\n");
+  const rulesMax = standingRulesWordMax(agent.level);
+  const rulesUsed = countWords(behaviorText);
+  const presetName =
+    getPersonalityPreset(agent.personalityPresetId ?? "")?.name ?? "Custom hire";
 
   function setSkill(key: SkillKey, rawValue: number) {
     const current = agent!.skills[key];
@@ -89,7 +94,8 @@ export function AgentEditScreen() {
         <div>
           <h2 className="panel-title">Edit · {agent.codename}</h2>
           <p className="panel-sub" style={{ marginBottom: 0 }}>
-            Standing profile feeds mission loadouts and evaluations.
+            Train skills and standing rules. Personality stays locked from hire.
+            {!agent.onChain && ` · ${COPY.localDesk}`}
           </p>
         </div>
         <button
@@ -143,10 +149,10 @@ export function AgentEditScreen() {
                 id="archetype"
                 value={agent.archetype}
                 onChange={(e) => {
-                  const archetype = e.target.value as Archetype;
-                  const nextPortraits = portraitsForArchetype(archetype);
+                  const next = e.target.value as Archetype;
+                  const nextPortraits = portraitsForArchetype(next);
                   updateAgent(agent.id, {
-                    archetype,
+                    archetype: next,
                     portraitId: nextPortraits[0]?.id ?? agent.portraitId,
                   });
                 }}
@@ -213,32 +219,34 @@ export function AgentEditScreen() {
                 <span className="meter-val">{agent.skills[key]}</span>
               </div>
             ))}
-            <p className="empty-note">
-              Redistribute within {SKILL_POINT_BUDGET} points. No skill trees —
-              raise one meter by lowering another.
-            </p>
           </>
         )}
 
         {tab === "character" && (
           <>
             <div className="field">
-              <label htmlFor="personality">Personality</label>
-              <textarea
-                id="personality"
-                value={agent.personality}
-                onChange={(e) =>
-                  updateAgent(agent.id, { personality: e.target.value })
-                }
-              />
+              <label>Personality</label>
+              <p className="panel-sub" style={{ marginBottom: "0.35rem" }}>
+                <strong>{presetName}</strong> — {COPY.personalityLocked}
+              </p>
+              <textarea id="personality" value={agent.personality} readOnly />
             </div>
             <div className="field">
-              <label htmlFor="rules">Behaviour rules (one per line)</label>
+              <label htmlFor="rules">Standing behaviour rules (one per line)</label>
+              <div
+                className={`word-meter${rulesUsed > rulesMax ? " over" : ""}`}
+              >
+                <span>Word budget (level {agent.level})</span>
+                <strong>
+                  {rulesUsed} / {rulesMax}
+                </strong>
+              </div>
               <textarea
                 id="rules"
                 value={behaviorText}
                 onChange={(e) => setRulesText(e.target.value)}
                 onBlur={() => {
+                  if (countWords(behaviorText) > rulesMax) return;
                   const rules = behaviorText
                     .split("\n")
                     .map((r) => r.trim())
@@ -247,6 +255,11 @@ export function AgentEditScreen() {
                   setRulesText(null);
                 }}
               />
+              {rulesUsed > rulesMax && (
+                <p className="empty-note">
+                  Over budget — lower the word count before it will save.
+                </p>
+              )}
             </div>
           </>
         )}
@@ -260,7 +273,7 @@ export function AgentEditScreen() {
               onChange={(e) =>
                 updateAgent(agent.id, { memoryDigest: e.target.value })
               }
-              placeholder="Short notes the operative carries between missions."
+              placeholder="Short notes the operative carries between cases."
             />
           </div>
         )}

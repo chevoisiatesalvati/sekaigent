@@ -35,6 +35,12 @@ type FieldState = {
     missionId: string,
     agentId: string,
     playDraft: MissionPlayDraft,
+    chain?: {
+      playHash?: string;
+      acceptTxHash?: string;
+      submitTxHash?: string;
+      chainError?: string;
+    },
   ) => FieldDeployment;
   markDebriefed: (missionId: string) => void;
   getForMission: (missionId: string) => FieldDeployment | undefined;
@@ -52,13 +58,17 @@ export const useFieldStore = create<FieldState>((set, get) => ({
       hydrated: true,
     });
   },
-  deploy: (missionId, agentId, playDraft) => {
+  deploy: (missionId, agentId, playDraft, chain) => {
     const row: FieldDeployment = {
       missionId,
       agentId,
       status: "in_field",
       deployedAt: Date.now(),
       playDraft,
+      playHash: chain?.playHash,
+      acceptTxHash: chain?.acceptTxHash,
+      submitTxHash: chain?.submitTxHash,
+      chainError: chain?.chainError,
     };
     const deployments = [
       row,

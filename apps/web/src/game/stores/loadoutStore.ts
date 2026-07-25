@@ -4,37 +4,22 @@ import { create } from "zustand";
 import type { MissionPlayDraft, SquadAgent } from "../types";
 import type { MissionListItem } from "@/lib/api";
 
+/** Lean scaffold — no pre-filled essays that burn the word budget. */
 function defaultDraft(
-  mission: MissionListItem,
-  agent: SquadAgent,
+  _mission: MissionListItem,
+  _agent: SquadAgent,
 ): MissionPlayDraft {
   return {
-    approach: `${agent.codename} takes a ${agent.archetype.toLowerCase()} line on ${mission.title}.`,
+    approach: "",
     steps: [
-      {
-        action: "Recon",
-        detail: `Survey ${mission.region_id} using standing tradecraft.`,
-      },
-      {
-        action: "Approach",
-        detail: "Move under cover consistent with personality and rules.",
-      },
-      {
-        action: "Execute",
-        detail: mission.public_brief,
-      },
-      {
-        action: "Exfil",
-        detail: "Leave no signature; report sealed outcome.",
-      },
+      { action: "Recon", detail: "" },
+      { action: "Execute", detail: "" },
+      { action: "Exfil", detail: "" },
     ],
-    risksAccepted: ["Limited window", "Local security presence"],
-    resourcesUsed: ["Cover identity", "Squad desk support"],
-    contingencies: [
-      "Abort if cover cracks",
-      "Fall back to surveillance-only if objective slips",
-    ],
-    finalOutcomeClaim: `Objective for ${mission.title} claimed without open conflict.`,
+    risksAccepted: [],
+    resourcesUsed: [],
+    contingencies: [],
+    finalOutcomeClaim: "",
   };
 }
 

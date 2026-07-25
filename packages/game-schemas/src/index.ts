@@ -8,6 +8,13 @@ export {
 } from "./agent.js";
 
 export {
+  CaseDocumentKindSchema,
+  CaseDocumentSchema,
+  type CaseDocumentKind,
+  type CaseDocument,
+} from "./case-document.js";
+
+export {
   MissionDurationSchema,
   MissionStatusSchema,
   HexBytes32Schema,

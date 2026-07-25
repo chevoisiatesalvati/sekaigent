@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { getPortrait, skillBiasForArchetype, type Archetype } from "@/lib/portraits";
+import { getPersonalityPreset } from "@/lib/personalities";
 import type { SkillKey } from "@/lib/copy";
 import {
   SKILL_KEYS,
@@ -9,7 +10,7 @@ import {
   type SquadAgent,
 } from "../types";
 
-const STORAGE_PREFIX = "sekaigent.squad.v2:";
+const STORAGE_PREFIX = "sekaigent.squad.v3:";
 
 function storageKey(ownerKey: string): string {
   return `${STORAGE_PREFIX}${ownerKey.toLowerCase()}`;
@@ -35,10 +36,12 @@ function demoSquad(): SquadAgent[] {
       missionCount: 4,
       winRate: 0.75,
       skills: skillBiasForArchetype("Infiltrator"),
-      personality: "Cautious, precise, dry humor under pressure.",
+      personality:
+        "Speaks little, moves less. Calm under pressure; distrusts improvisation.",
+      personalityPresetId: "ice-quiet",
       behaviorRules: [
-        "Never bribe when forgery will do",
-        "Prefer silent exits over confrontation",
+        "Prefer silence over charm",
+        "Abort if cover requires a scene",
       ],
       memoryDigest: "Harbor docks. One close call with a night watch.",
       dossierNumber: "1",
@@ -56,8 +59,10 @@ function demoSquad(): SquadAgent[] {
       missionCount: 2,
       winRate: 0.5,
       skills: skillBiasForArchetype("Forger"),
-      personality: "Methodical, vain about craftsmanship, loyal to the desk.",
-      behaviorRules: ["Leave no ink trail", "Never reuse a plate"],
+      personality:
+        "Obsessed with clean paper trails. Hates loose ink and louder exits.",
+      personalityPresetId: "ink-precise",
+      behaviorRules: ["Leave no ink trail", "Never reuse a plate or stamp"],
       memoryDigest: "Embassy stamp kit recovered intact.",
       createdAt: now - 86400000 * 5,
     },
@@ -73,7 +78,9 @@ function demoSquad(): SquadAgent[] {
       missionCount: 3,
       winRate: 0.67,
       skills: skillBiasForArchetype("Watcher"),
-      personality: "Patient observer; speaks only when the pattern closes.",
+      personality:
+        "Patience as a weapon. Watches patterns until the pattern closes.",
+      personalityPresetId: "long-watch",
       behaviorRules: [
         "Watch before approach",
         "Do not break cover for curiosity",
@@ -142,7 +149,7 @@ export type RecruitInput = {
   archetype: Archetype;
   portraitId: string;
   publicSummary?: string;
-  personality?: string;
+  personalityPresetId: string;
 };
 
 type SquadState = {
@@ -168,6 +175,10 @@ export const useSquadStore = create<SquadState>((set, get) => ({
     if (!portrait || portrait.archetype !== input.archetype) {
       throw new Error("Choose a portrait that matches the archetype.");
     }
+    const preset = getPersonalityPreset(input.personalityPresetId);
+    if (!preset) {
+      throw new Error("Choose a personality.");
+    }
     const agent: SquadAgent = {
       id: `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       name: input.name.trim(),
@@ -182,11 +193,11 @@ export const useSquadStore = create<SquadState>((set, get) => ({
       missionCount: 0,
       winRate: 0,
       skills: clampSkills(skillBiasForArchetype(input.archetype)),
-      personality:
-        input.personality?.trim() ||
-        "Professional, adaptable, loyal to the desk.",
-      behaviorRules: ["Follow the brief", "Protect cover identity"],
+      personality: preset.personality,
+      personalityPresetId: preset.id,
+      behaviorRules: [...preset.behaviorRules],
       memoryDigest: "",
+      onChain: false,
       createdAt: Date.now(),
     };
     const agents = [agent, ...get().agents];
@@ -197,7 +208,9 @@ export const useSquadStore = create<SquadState>((set, get) => ({
   updateAgent: (agentId, patch) => {
     const agents = get().agents.map((agent) => {
       if (agent.id !== agentId) return agent;
-      const merged = { ...agent, ...patch };
+      // Personality is locked after hire
+      const { personality: _p, personalityPresetId: _id, ...safe } = patch;
+      const merged = { ...agent, ...safe };
       if (patch.skills) {
         merged.skills = clampSkills(patch.skills);
       }

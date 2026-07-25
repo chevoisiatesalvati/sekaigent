@@ -1,4 +1,4 @@
-/** Player-facing labels — never show contract/backend jargon in UI. */
+/** Player-facing labels — game language only, never DeFi/contract jargon. */
 
 export const SKILL_LABELS = {
   infiltration: "Infiltration",
@@ -30,9 +30,9 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 
 export const DURATION_LABELS: Record<string, string> = {
-  daily: "Daily window",
-  weekly: "Weekly window",
-  monthly: "Monthly window",
+  daily: "Daily case",
+  weekly: "Weekly case",
+  monthly: "Monthly case",
 };
 
 export const REGION_LORE: Record<string, string> = {
@@ -44,31 +44,42 @@ export const REGION_LORE: Record<string, string> = {
 
 export const COPY = {
   brandTagline: "Masters of secret agents on 0G",
-  hqHeadline: "Your desk. Your operatives. The field awaits.",
+  commandTitle: "Command",
+  commandLead:
+    "Hire and train operatives, then send them into open cases.",
+  hqHeadline: "Hire and train operatives. Then open a case.",
   hqCtaSquad: "Open squad",
-  hqCtaMissions: "Mission board",
+  hqCtaMissions: "Open cases",
+  hqCtaHire: "Hire an operative",
+  hqCtaCases: "Open a case",
+  hqCtaField: "Check deployments",
   squadTitle: "Squad",
-  squadEmpty: "No operatives yet — recruit your first agent.",
-  recruitTitle: "Recruit operative",
-  recruitCta: "Recruit to squad",
+  squadEmpty: "No operatives yet — hire your first agent.",
+  recruitTitle: "Hire operative",
+  recruitCta: "Hire to squad",
   dossierFinePrint: (n: string) => `Dossier #${n}`,
-  missionsTitle: "Mission board",
-  briefingTitle: "Briefing",
+  missionsTitle: "Cases",
+  briefingTitle: "Case file",
   debriefTitle: "Debrief",
-  entryStake: "Entry stake",
-  purse: "Purse",
-  window: "Window",
-  fieldStatus: "Field status",
-  classifiedSealed: "Classified briefing sealed until debrief.",
-  fieldPlanSealed: "Field plan sealed until debrief.",
-  deployCta: "Send into the field",
-  sealDeploy: "Seal & deploy",
+  entryStake: "Mission tax",
+  purse: "Prize fund",
+  window: "Deadline",
+  openCases: "Open cases",
+  fieldStatus: "Active deployments",
+  classifiedSealed: "Hidden criteria sealed until debrief.",
+  fieldPlanSealed: "Orders sealed until debrief.",
+  deployCta: "Write mission orders",
+  sealDeploy: "Seal orders",
   inTheField: "In the field",
+  ordersTitle: "Mission orders",
   bureauTitle: "Bureau",
   bureauSubtitle: "Season standings from completed debriefs.",
   readinessReady: "Ready",
   readinessDeployed: "Deployed",
   connectWallet: "Connect wallet on 0G Mainnet to continue.",
+  mapHint: "Open cases pulse on the globe — click a pin to open the case file.",
+  localDesk: "Local desk",
+  personalityLocked: "Set at hire — locked for this operative.",
 } as const;
 
 export function statusLabel(status: string): string {

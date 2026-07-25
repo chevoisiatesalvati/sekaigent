@@ -91,6 +91,7 @@ export function SquadScreen() {
                   <AgentShowcase
                     portraitSrc={agentPortraitSrc(selected)}
                     codename={selected.codename}
+                    archetype={selected.archetype}
                   />
                 </div>
                 <h3 className="panel-title">{selected.codename}</h3>

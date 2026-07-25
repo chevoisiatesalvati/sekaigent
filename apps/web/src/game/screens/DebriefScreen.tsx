@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   fetchMission,
   fetchMissionAudit,
+  MOCK_AUDITS,
   MOCK_MISSIONS,
   regionName,
   type MissionAudit,
@@ -13,26 +14,6 @@ import { COPY, RUBRIC_LABELS, statusLabel, type RubricKey } from "@/lib/copy";
 import { useUiStore } from "../stores/uiStore";
 import { useFieldStore } from "../stores/fieldStore";
 import { resolveOperativeLabel } from "../components/resolveOperative";
-
-const MOCK_AUDIT: MissionAudit = {
-  missionId: "mock-archive",
-  revealedCriteria: "Recover ledger without bribes or open violence.",
-  rankings: [
-    {
-      rank: 1,
-      agentTokenId: "1",
-      total: 83,
-      reasoning:
-        "Clean infiltration path; restraint held; criteria fit strong.",
-      scores: {
-        objectiveFit: 26,
-        constraintCompliance: 22,
-        tradecraftQuality: 20,
-        characterConsistency: 15,
-      },
-    },
-  ],
-};
 
 export function DebriefScreen() {
   const missionId = useUiStore((s) => s.selectedMissionId);
@@ -46,11 +27,7 @@ export function DebriefScreen() {
     if (!missionId) return;
     const mock = MOCK_MISSIONS.find((m) => m.id === missionId) ?? null;
     setMission(mock);
-    setAudit(
-      missionId === "mock-archive" || missionId.startsWith("mock-")
-        ? { ...MOCK_AUDIT, missionId }
-        : null,
-    );
+    setAudit(MOCK_AUDITS[missionId] ?? null);
     let cancelled = false;
     Promise.all([fetchMission(missionId), fetchMissionAudit(missionId)]).then(
       ([m, a]) => {
@@ -74,13 +51,15 @@ export function DebriefScreen() {
           className="btn secondary"
           onClick={() => setScreen("map")}
         >
-          Map
+          Cases
         </button>
       </div>
     );
   }
 
   const rankings = audit?.rankings ?? [];
+  const solution =
+    audit?.solutionNotes ?? mission?.solution_notes ?? null;
 
   return (
     <div className="screen-scroll">
@@ -89,7 +68,7 @@ export function DebriefScreen() {
         className="btn ghost"
         onClick={() => setScreen("map")}
       >
-        ← Map
+        ← Cases
       </button>
       <h2 className="panel-title" style={{ marginTop: "0.5rem" }}>
         {COPY.debriefTitle}
@@ -104,16 +83,23 @@ export function DebriefScreen() {
         <h3 className="panel-title">Revealed criteria</h3>
         <p>
           {audit?.revealedCriteria ??
-            "Criteria still sealed or unavailable from API."}
+            mission?.hidden_criteria ??
+            "Criteria still sealed or unavailable."}
         </p>
       </div>
+
+      {solution && (
+        <div className="panel" style={{ marginBottom: "1rem" }}>
+          <h3 className="panel-title">Case solution</h3>
+          <p>{solution}</p>
+        </div>
+      )}
 
       <div className="panel">
         <h3 className="panel-title">Rankings</h3>
         {rankings.length === 0 ? (
           <p className="empty-note">
-            No public rankings yet. Settled missions will show rubric totals
-            here.
+            No public rankings yet. Settled cases show rubric totals here.
           </p>
         ) : (
           <table className="rank-table">
@@ -134,7 +120,10 @@ export function DebriefScreen() {
                   <td>
                     <div>{row.reasoning}</div>
                     {row.scores && (
-                      <div className="chip-row" style={{ marginTop: "0.35rem" }}>
+                      <div
+                        className="chip-row"
+                        style={{ marginTop: "0.35rem" }}
+                      >
                         {(Object.keys(RUBRIC_LABELS) as RubricKey[]).map(
                           (key) =>
                             row.scores?.[key] != null ? (

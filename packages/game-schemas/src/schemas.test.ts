@@ -82,6 +82,14 @@ describe("MissionSchema", () => {
       regionId: "harbor",
       title: "Harbor Manifest",
       publicBrief: "Recover the shipment manifest without raising alarms.",
+      caseFile: [
+        {
+          id: "d1",
+          kind: "cable",
+          title: "Night rota",
+          body: "Clerk leaves at 01:10.",
+        },
+      ],
       duration: "daily",
       startsAt: 1,
       endsAt: 2,
@@ -93,6 +101,7 @@ describe("MissionSchema", () => {
       rubricId: "default-v1",
     });
     assert.equal(mission.duration, "daily");
+    assert.equal(mission.caseFile.length, 1);
   });
 
   it("rejects bad criteria commitment", () => {

@@ -221,3 +221,63 @@ Deploy persists locally (chain accept/submit deferred to Phase 8).
 Debrief rankings/rubric UI with mock settled mission + API audit fetch.
 Motion polish (panel wipe, seal spring, map pulse); Phase 7 logged complete.
 
+## Phase 8 — UX flow, case dossiers
+
+### 8.1 — Done
+
+Squad · Cases · Field · Command rail; Command hub with single next action.
+Smaller roster cards; taller full-body agent showcase; squad-first default route.
+
+### 8.2 — Done
+
+Preset personalities at hire (`personalities.ts`); personality locked in AgentEdit.
+Recruit requires a preset; standing rules still editable.
+
+### 8.3 — Done
+
+Level word budgets: standing rules 15+(L-1)*5; mission orders 25+(L-1)*5.
+Live counters; Seal blocked when over budget; unit tests added.
+
+### 8.4 — Done
+
+CaseDocument schema + API `case_file`/`solution_notes` migration.
+Sherlock-style dossier UI on case file screen; three mock cases with signal/noise pages.
+
+### 8.5 — Done
+
+Globe pins parented to rotating `globeGroup` with textured sphere; Float removed.
+Pins stay on the map while the globe yaws.
+
+### 8.6 — Done
+
+Bureau Ops admin form with dossier document editor, mission tax in 0G, solution notes.
+Posts `caseFile` to API with bearer token.
+
+### 8.7 — Done
+
+Glossary pass: mission tax, prize fund, deadline, open cases, case file, orders.
+Map/Command/Field copy cleaned of DeFi and “window” language.
+
+## Phase 9 — Chain + API wiring
+
+### 9.1 — Done
+
+`lib/contracts.ts` loads mainnet addresses + ABIs; playHash helper for orders.
+
+### 9.2 — Done
+
+Recruit attempts SekaiAgent mint when wallet has minter role; otherwise local desk badge.
+
+### 9.3 — Done
+
+Seal attempts MissionVault acceptMission (mission tax) + submitPlay when on-chain ids exist.
+Field store records playHash / tx hashes; falls back to local seal.
+
+### 9.4 — Done
+
+Missions/debrief prefer API with mock case-file fallback; audit surfaces solution notes.
+
+### 9.5 — Done
+
+Wrong-network / no-role copy in mint and seal paths; admin remains API-first.
+
