@@ -162,3 +162,10 @@ Reveal/eval/settle txs recorded for chainscan verification.
 Documented mainnet ops runbook (deploy, mint, mission, pause, monitoring).
 Phase 5 E2E complete on 0G Mainnet.
 
+## Phase 6 — Football Manager–style frontend
+
+### 6.1 — Done
+
+Added player copy/format helpers, curated portrait catalog + SVG assets, local squad/field stores.
+Ops shell CSS, HQ/Squad/Missions/Bureau nav (admin unlisted), route skeleton for game IA.
+

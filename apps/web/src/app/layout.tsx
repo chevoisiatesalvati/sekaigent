@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <div className="shell">
+          <div className="ops-shell">
             <SiteHeader />
             {children}
           </div>
