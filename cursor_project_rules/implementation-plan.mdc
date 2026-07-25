@@ -101,7 +101,11 @@ Golden fixture test produces schema-valid plays from brief + agent intel.
 Implemented deterministic rubric evaluator with promptVersion rubric-v1 and bribe/stealth penalties.
 Fixture tests keep scores within rubric bounds.
 
-### 3.4 — Pending
+### 3.4 — Done
+
+Added offline evaluate-and-settle pipeline (generate play, seal storage, score, evalHash).
+Integration test covers mocked-chain pipeline end-to-end.
+
 
 ## Phase 4 — Frontend
 

@@ -32,3 +32,4 @@ export {
   buildEvalSystemPrompt,
   type EvaluateInput,
 } from "./evaluate.js";
+export { runOfflineMissionPipeline, type PipelineResult } from "./pipeline.js";
