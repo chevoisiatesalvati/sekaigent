@@ -1,7 +1,17 @@
-import "dotenv/config";
+import { config as loadDotenv } from "dotenv";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
+// Load monorepo root .env when running from apps/api
+const rootEnv = resolve(process.cwd(), "../../.env");
+const localEnv = resolve(process.cwd(), ".env");
+if (existsSync(rootEnv)) loadDotenv({ path: rootEnv });
+else if (existsSync(localEnv)) loadDotenv({ path: localEnv });
+else loadDotenv();
 
 export const config = {
   port: Number(process.env.API_PORT ?? 3001),
+  // Prefer Docker Compose Postgres; set DATABASE_URL=pglite or USE_PGLITE=1 for embedded fallback
   databaseUrl:
     process.env.DATABASE_URL ??
     "postgresql://sekaigent:sekaigent@localhost:5432/sekaigent",

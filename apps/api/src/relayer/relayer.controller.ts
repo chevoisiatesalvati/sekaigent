@@ -1,11 +1,14 @@
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Inject, Post, UseGuards } from "@nestjs/common";
 import { AdminGuard } from "../missions/admin.guard.js";
 import { RelayerService } from "./relayer.service.js";
 import type { Hex } from "viem";
 
 @Controller("relayer")
 export class RelayerController {
-  constructor(private readonly relayer: RelayerService) {}
+  constructor(
+    @Inject(RelayerService)
+    private readonly relayer: RelayerService,
+  ) {}
 
   @Post("dry-run/post-evaluation")
   @UseGuards(AdminGuard)

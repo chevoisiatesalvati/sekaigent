@@ -31,6 +31,7 @@ lib/forge-std/
 
 # Local data
 apps/api/.data/
+**/.data/
 *.sqlite
 *.db
 docker-data/

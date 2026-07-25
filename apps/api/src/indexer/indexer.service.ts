@@ -46,7 +46,7 @@ export class IndexerService {
     blockNumber: bigint;
     payload: Record<string, unknown>;
   }): Promise<void> {
-    const pool = getPool();
+    const pool = await getPool();
     await pool.query(
       `INSERT INTO indexed_events (tx_hash, log_index, event_name, payload_json, block_number)
        VALUES ($1,$2,$3,$4,$5)
@@ -96,7 +96,7 @@ export class IndexerService {
   }
 
   async listEvents() {
-    const pool = getPool();
+    const pool = await getPool();
     const { rows } = await pool.query(
       `SELECT * FROM indexed_events ORDER BY block_number DESC, log_index DESC LIMIT 100`,
     );

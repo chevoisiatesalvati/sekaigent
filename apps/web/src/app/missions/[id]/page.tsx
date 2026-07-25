@@ -1,21 +1,49 @@
-import { MOCK_MISSIONS, fetchMissions } from "@/lib/api";
 import { AcceptMissionButton } from "./AcceptMissionButton";
 
-const MOCK_RANKINGS = [
-  {
-    rank: 1,
-    agentTokenId: "1",
-    total: 84,
-    reasoning:
-      "Strong cover and stealth contingencies; respected no-bribe constraint.",
-  },
-  {
-    rank: 2,
-    agentTokenId: "4",
-    total: 71,
-    reasoning: "Solid tradecraft; weaker character consistency on forgery claim.",
-  },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+type Mission = {
+  id: string;
+  region_id: string;
+  title: string;
+  public_brief: string;
+  duration: string;
+  status: string;
+  entry_fee_wei: string;
+  ends_at: string;
+};
+
+type Audit = {
+  rankings?: Array<{
+    rank: number;
+    agentTokenId: string;
+    total: number;
+    reasoning: string;
+  }>;
+  revealedCriteria?: string;
+};
+
+async function loadMission(id: string): Promise<Mission | null> {
+  try {
+    const res = await fetch(`${API_URL}/missions/${id}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as Mission;
+  } catch {
+    return null;
+  }
+}
+
+async function loadAudit(id: string): Promise<Audit | null> {
+  try {
+    const res = await fetch(`${API_URL}/missions/${id}/audit`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as Audit;
+  } catch {
+    return null;
+  }
+}
 
 export default async function MissionPage({
   params,
@@ -23,18 +51,25 @@ export default async function MissionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const missions = await fetchMissions();
-  const mission =
-    missions.find((m) => m.id === id) ??
-    MOCK_MISSIONS.find((m) => m.id === id) ??
-    MOCK_MISSIONS[0];
+  const mission = await loadMission(id);
+  if (!mission) {
+    return (
+      <main>
+        <h1>Mission not found</h1>
+        <p className="muted">Is the API running on {API_URL}?</p>
+      </main>
+    );
+  }
 
   const settled = mission.status === "settled";
+  const audit = settled ? await loadAudit(id) : null;
 
   return (
     <main className="stack">
       <div>
-        <p className="muted">{mission.region_id} · {mission.duration}</p>
+        <p className="muted">
+          {mission.region_id} · {mission.duration}
+        </p>
         <h1>{mission.title}</h1>
         <p>{mission.public_brief}</p>
       </div>
@@ -43,12 +78,19 @@ export default async function MissionPage({
           Entry fee: {mission.entry_fee_wei} wei · Status:{" "}
           <strong>{mission.status}</strong>
         </p>
-        <p className="muted">Ends {new Date(mission.ends_at).toLocaleString()}</p>
+        <p className="muted">
+          Ends {new Date(mission.ends_at).toLocaleString()}
+        </p>
         {!settled && <AcceptMissionButton missionId={mission.id} />}
       </div>
-      {settled && (
+      {settled && audit?.rankings && (
         <section className="panel">
-          <h2>Rankings</h2>
+          <h2>Rankings & public audit</h2>
+          {audit.revealedCriteria && (
+            <p className="muted">
+              Revealed criteria: {audit.revealedCriteria}
+            </p>
+          )}
           <table className="table">
             <thead>
               <tr>
@@ -59,7 +101,7 @@ export default async function MissionPage({
               </tr>
             </thead>
             <tbody>
-              {MOCK_RANKINGS.map((row) => (
+              {audit.rankings.map((row) => (
                 <tr key={row.agentTokenId}>
                   <td>{row.rank}</td>
                   <td>#{row.agentTokenId}</td>

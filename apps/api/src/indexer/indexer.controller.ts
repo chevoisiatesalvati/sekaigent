@@ -1,11 +1,14 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Post, UseGuards } from "@nestjs/common";
 import { AdminGuard } from "../missions/admin.guard.js";
 import { IndexerService } from "./indexer.service.js";
 import type { Hex } from "viem";
 
 @Controller("indexer")
 export class IndexerController {
-  constructor(private readonly indexer: IndexerService) {}
+  constructor(
+    @Inject(IndexerService)
+    private readonly indexer: IndexerService,
+  ) {}
 
   @Get("events")
   list() {

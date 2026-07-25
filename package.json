@@ -9,7 +9,11 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "dev:api": "npm run dev --workspace=@sekaigent/api",
+    "dev:web": "npm run dev --workspace=@sekaigent/web"
   },
   "engines": {
     "node": ">=20"
