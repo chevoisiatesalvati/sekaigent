@@ -3,8 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "echo \"web scaffold — Next.js added in phase 4\"",
-    "build": "echo \"web scaffold — no build yet\"",
-    "lint": "echo \"ok\""
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "echo \"ok\"",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@sekaigent/game-schemas": "*",
+    "@tanstack/react-query": "^5.69.0",
+    "next": "^15.2.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "viem": "^2.23.15",
+    "wagmi": "^2.14.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
   }
 }
