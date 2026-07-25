@@ -23,7 +23,11 @@ function emptyDoc(): CaseDocument {
   };
 }
 
-export function AdminMissionForm() {
+type AdminMissionFormProps = {
+  onCreated?: () => void;
+};
+
+export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
   const [title, setTitle] = useState("Harbor Manifest");
   const [regionId, setRegionId] = useState("harbor");
   const [publicBrief, setPublicBrief] = useState(
@@ -74,6 +78,7 @@ export function AdminMissionForm() {
         salt: crypto.randomUUID(),
       });
       setResult(JSON.stringify(body, null, 2));
+      onCreated?.();
     } catch (error) {
       setResult(String(error));
     }

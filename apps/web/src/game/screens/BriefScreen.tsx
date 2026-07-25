@@ -42,9 +42,9 @@ export function BriefScreen() {
   const beginLoadout = useLoadoutStore((s) => s.begin);
   const setMark = useDossierMarksStore((s) => s.setMark);
   const clearMark = useDossierMarksStore((s) => s.clearMark);
-  const marksFor = useDossierMarksStore((s) => s.marksFor);
-  const signalIds = useDossierMarksStore((s) => s.signalIds);
-  const noiseIds = useDossierMarksStore((s) => s.noiseIds);
+  // Subscribe to byMission so Signal/Noise chips re-render on mark change
+  // (selecting marksFor/signalIds alone never changes identity).
+  const marksByMission = useDossierMarksStore((s) => s.byMission);
   const { isConnected } = useAccount();
 
   const [mission, setMission] = useState<MissionListItem | null>(null);
@@ -87,9 +87,13 @@ export function BriefScreen() {
   const readyAgents = agents.filter((a) => !getActiveForAgent(a.id));
   const selected =
     agents.find((a) => a.id === selectedAgentId) ?? readyAgents[0] ?? null;
-  const marks = marksFor(mission.id);
-  const signals = signalIds(mission.id);
-  const noises = noiseIds(mission.id);
+  const marks = marksByMission[mission.id] ?? {};
+  const signals = Object.entries(marks)
+    .filter(([, m]) => m === "signal")
+    .map(([id]) => id);
+  const noises = Object.entries(marks)
+    .filter(([, m]) => m === "noise")
+    .map(([id]) => id);
   const activeMark: PageMark | undefined = activeDoc
     ? marks[activeDoc.id]
     : undefined;

@@ -1,7 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-import { getPortrait, skillBiasForArchetype, type Archetype } from "@/lib/portraits";
+import {
+  ARCHETYPES,
+  getPortrait,
+  skillBiasForArchetype,
+  type Archetype,
+} from "@/lib/portraits";
 import { getPersonalityPreset } from "@/lib/personalities";
 import type { SkillKey } from "@/lib/copy";
 import { USE_MOCKS } from "@/lib/api";
@@ -176,7 +181,24 @@ type SquadState = {
   hydrated: boolean;
   hydrate: (ownerKey: string) => void;
   mergeChainAgents: (
-    owned: Array<{ tokenId: string; encryptedURI: string }>,
+    owned: Array<{
+      tokenId: string;
+      encryptedURI?: string;
+      name: string;
+      codename: string;
+      archetype: string;
+      portraitId: string;
+      publicSummary: string;
+      level?: number;
+      xp?: number;
+      missionCount?: number;
+      winRate?: number;
+      skills?: Record<string, number>;
+      personality?: string;
+      behaviorRules?: string[];
+      memoryDigest?: string;
+      source?: string;
+    }>,
   ) => void;
   recruit: (input: RecruitInput) => SquadAgent;
   updateAgent: (agentId: string, patch: Partial<SquadAgent>) => void;
@@ -202,33 +224,62 @@ export const useSquadStore = create<SquadState>((set, get) => ({
     let changed = false;
     const next = [...current];
     for (const row of owned) {
+      const archetype = (
+        ARCHETYPES.includes(row.archetype as Archetype)
+          ? row.archetype
+          : "Infiltrator"
+      ) as Archetype;
       const existing = byToken.get(row.tokenId);
       if (existing) {
-        if (!existing.onChain) {
-          const idx = next.findIndex((a) => a.id === existing.id);
-          if (idx >= 0) {
-            next[idx] = { ...existing, onChain: true };
-            changed = true;
-          }
+        const idx = next.findIndex((a) => a.id === existing.id);
+        if (idx < 0) continue;
+        const fromStorage = row.source === "storage" || row.source === "cache";
+        const stub =
+          existing.codename.startsWith("AGENT-") ||
+          existing.name.startsWith("Operative ");
+        const patch: Partial<SquadAgent> = {
+          onChain: true,
+          dossierNumber: row.tokenId,
+        };
+        if (fromStorage || stub || !existing.onChain) {
+          patch.name = row.name;
+          patch.codename = row.codename;
+          patch.archetype = archetype;
+          patch.portraitId = row.portraitId || existing.portraitId;
+          patch.publicSummary = row.publicSummary || existing.publicSummary;
+          if (row.level != null) patch.level = row.level;
+          if (row.xp != null) patch.xp = row.xp;
+          if (row.missionCount != null) patch.missionCount = row.missionCount;
+          if (row.winRate != null) patch.winRate = row.winRate;
+          if (row.skills) patch.skills = clampSkills(row.skills as SquadAgent["skills"]);
+          if (row.personality) patch.personality = row.personality;
+          if (row.behaviorRules) patch.behaviorRules = row.behaviorRules;
+          if (row.memoryDigest != null) patch.memoryDigest = row.memoryDigest;
         }
+        next[idx] = { ...existing, ...patch };
+        changed = true;
         continue;
       }
       next.unshift({
         id: `chain-${row.tokenId}`,
-        name: `Operative ${row.tokenId}`,
-        codename: `AGENT-${row.tokenId}`,
-        archetype: "Infiltrator",
-        portraitId: "inf-01",
-        publicSummary: "On-chain dossier — intel sealed on 0G Storage.",
-        level: 1,
-        xp: 0,
-        missionCount: 0,
-        winRate: 0,
-        skills: clampSkills(skillBiasForArchetype("Infiltrator")),
-        personality: "Classified.",
+        name: row.name,
+        codename: row.codename,
+        archetype,
+        portraitId: row.portraitId || "inf-01",
+        publicSummary:
+          row.publicSummary ||
+          "On-chain dossier — package sealed on 0G Storage.",
+        level: row.level ?? 1,
+        xp: row.xp ?? 0,
+        missionCount: row.missionCount ?? 0,
+        winRate: row.winRate ?? 0,
+        skills: row.skills
+          ? clampSkills(row.skills as SquadAgent["skills"])
+          : clampSkills(skillBiasForArchetype(archetype)),
+        personality: row.personality ?? "Classified.",
         personalityPresetId: "ice-quiet",
-        behaviorRules: [],
-        memoryDigest: row.encryptedURI,
+        behaviorRules: row.behaviorRules ?? [],
+        memoryDigest: row.memoryDigest ?? "",
         dossierNumber: row.tokenId,
         onChain: true,
         createdAt: Date.now(),

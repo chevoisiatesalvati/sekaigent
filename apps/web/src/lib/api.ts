@@ -96,25 +96,62 @@ export async function fetchMissionAudit(
   }
 }
 
-export async function fetchOwnedAgents(address: string): Promise<
-  Array<{ tokenId: string; encryptedURI: string; metadataHash: string }>
-> {
+export type OwnedAgentCard = {
+  tokenId: string;
+  encryptedURI?: string;
+  metadataHash?: string;
+  name: string;
+  codename: string;
+  archetype: string;
+  portraitId: string;
+  publicSummary: string;
+  level?: number;
+  xp?: number;
+  missionCount?: number;
+  winRate?: number;
+  skills?: Record<string, number>;
+  personality?: string;
+  behaviorRules?: string[];
+  memoryDigest?: string;
+  source?: "storage" | "cache" | "stub";
+};
+
+export async function fetchOwnedAgents(
+  address: string,
+): Promise<OwnedAgentCard[]> {
   try {
     const res = await fetch(
       `${API_URL}/agents/owned?address=${encodeURIComponent(address)}`,
       { cache: "no-store" },
     );
     if (!res.ok) return [];
-    const body = (await res.json()) as {
-      agents?: Array<{
-        tokenId: string;
-        encryptedURI: string;
-        metadataHash: string;
-      }>;
-    };
+    const body = (await res.json()) as { agents?: OwnedAgentCard[] };
     return body.agents ?? [];
   } catch {
     return [];
+  }
+}
+
+export async function registerAgentCard(card: {
+  tokenId: string;
+  ownerAddress?: string;
+  name: string;
+  codename: string;
+  archetype: string;
+  portraitId: string;
+  publicSummary?: string;
+  encryptedURI?: string;
+  metadataHash?: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/agents/cards`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(card),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }
 
@@ -233,6 +270,30 @@ export async function createMissionAdmin(
     body: JSON.stringify(payload),
   });
   return res.json();
+}
+
+export async function revealMissionAdmin(
+  token: string,
+  missionId: string,
+): Promise<unknown> {
+  const res = await fetch(
+    `${API_URL}/missions/${encodeURIComponent(missionId)}/reveal`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body === "object" && body && "error" in body
+        ? String((body as { error: string }).error)
+        : `reveal_failed_${res.status}`,
+    );
+  }
+  return body;
 }
 
 export type SuggestOrdersPayload = {

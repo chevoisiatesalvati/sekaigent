@@ -14,6 +14,7 @@ import { hashMissionPlayDraft } from "@/lib/playHash";
 import {
   missionChainId,
   recordPlayStorage,
+  registerAgentCard,
   sealAgentIntel,
   sealPlayToStorage,
   USE_MOCKS,
@@ -64,16 +65,36 @@ export function useMintAgent() {
         return null;
       }
 
-      setStatus("Sealing private intel…");
-      const intel = {
-        personality: agent.personality,
-        skills: agent.skills,
-        behaviorRules: agent.behaviorRules,
-        memoryDigest: agent.memoryDigest,
+      setStatus("Sealing agent package to 0G Storage…");
+      // ERC-7857 / plan: NFT.encryptedURI → sealed package on 0G Storage.
+      // metadataHash commits to publicCard; privateIntel is in the same blob.
+      const publicCard = {
+        name: agent.name,
+        codename: agent.codename,
+        archetype: agent.archetype,
+        portraitId: agent.portraitId,
+        publicSummary: agent.publicSummary,
+        level: agent.level,
+        xp: agent.xp,
+        missionCount: agent.missionCount,
+        winRate: agent.winRate,
       };
-      const sealed = await sealAgentIntel(intel);
+      const packagePayload = {
+        version: 1 as const,
+        publicCard,
+        privateIntel: {
+          personality: agent.personality,
+          skills: agent.skills,
+          behaviorRules: agent.behaviorRules,
+          memoryDigest: agent.memoryDigest,
+        },
+      };
+      const sealed = await sealAgentIntel(packagePayload);
       const encryptedURI = sealed?.rootHash
-        ? `0g://${sealed.rootHash}`
+        ? sealed.rootHash.startsWith("0g://") ||
+          sealed.rootHash.startsWith("mem://")
+          ? sealed.rootHash
+          : `0g://${sealed.rootHash}`
         : USE_MOCKS
           ? `local://${agent.id}`
           : null;
@@ -82,17 +103,7 @@ export function useMintAgent() {
         return null;
       }
 
-      const metadataHash = keccak256(
-        stringToHex(
-          JSON.stringify({
-            name: agent.name,
-            codename: agent.codename,
-            archetype: agent.archetype,
-            portraitId: agent.portraitId,
-            publicSummary: agent.publicSummary,
-          }),
-        ),
-      );
+      const metadataHash = keccak256(stringToHex(JSON.stringify(publicCard)));
       setStatus("Minting on 0G…");
       const nextBefore = (await publicClient.readContract({
         address: MAINNET_ADDRESSES.sekaiAgent,
@@ -109,6 +120,13 @@ export function useMintAgent() {
         hash: txHash,
       });
       const tokenId = String(nextBefore);
+      await registerAgentCard({
+        tokenId,
+        ownerAddress: address,
+        ...publicCard,
+        encryptedURI,
+        metadataHash,
+      });
       setStatus(`Minted dossier #${tokenId}`);
       return {
         tokenId,
