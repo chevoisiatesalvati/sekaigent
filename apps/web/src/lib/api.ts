@@ -89,6 +89,17 @@ export const MOCK_MISSIONS: MissionListItem[] = [
     prize_pool_wei: "0",
     ends_at: new Date(Date.now() + 7 * 86400000).toISOString(),
   },
+  {
+    id: "mock-archive",
+    region_id: "archive",
+    title: "Ash Ledger",
+    public_brief: "Lift the redacted ledger page before the night clerk returns.",
+    duration: "daily",
+    status: "settled",
+    entry_fee_wei: "1000000000000000",
+    prize_pool_wei: "3000000000000000",
+    ends_at: new Date(Date.now() - 86400000).toISOString(),
+  },
 ];
 
 export const REGIONS = [

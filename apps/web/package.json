@@ -10,18 +10,24 @@
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@sekaigent/game-schemas": "*",
     "@tanstack/react-query": "^5.69.0",
+    "framer-motion": "^12.42.2",
     "next": "^15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "three": "^0.185.1",
     "viem": "^2.23.15",
-    "wagmi": "^2.14.15"
+    "wagmi": "^2.14.15",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
+    "@types/three": "^0.185.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

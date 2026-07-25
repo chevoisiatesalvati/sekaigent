@@ -189,3 +189,35 @@ Field desk lists active deployments; no on-chain accept/submit in this phase.
 Operations HQ desk composition, Bureau season table + debrief podiums with portraits.
 Admin unlisted as Bureau ops; map pulse / deploy stamp / roster lift motions in place.
 
+## Phase 7 — Game-window UI rework
+
+### 7.1 — Done
+
+Installed three/R3F/drei, framer-motion, zustand; deleted Phase 6 scrolling pages/components.
+Added fixed `100dvh` GameShell with brand chrome and wallet; `next build` passes.
+
+### 7.2 — Done
+
+Zustand screen router (HQ/Squad/Map/Field + overlays) with Framer Motion panel transitions.
+HQ/Squad/Field screens use local demo squad seed; no document scroll.
+
+### 7.3 — Done
+
+AgentEdit tabs for profile, skills (450-point budget), personality/behaviorRules, memoryDigest.
+Recruit wizard wallet-gated; validates against existing agent schema fields.
+
+### 7.4 — Done
+
+R3F WorldStage globe with region pins, open-mission pulse, OrbitControls.
+Pin click opens Brief or Debrief; procedural assets (GLB swap-ready).
+
+### 7.5 — Done
+
+Brief chips in 0G; MissionPlay-shaped loadout editor; seal animation → field store.
+Deploy persists locally (chain accept/submit deferred to Phase 8).
+
+### 7.6 — Done
+
+Debrief rankings/rubric UI with mock settled mission + API audit fetch.
+Motion polish (panel wipe, seal spring, map pulse); Phase 7 logged complete.
+
