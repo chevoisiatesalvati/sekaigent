@@ -19,7 +19,7 @@ const WorldStage = dynamic(
 );
 
 function orderMissions(missions: MissionListItem[]): MissionListItem[] {
-  const regionOrder = REGIONS.map((r) => r.id);
+  const regionOrder = REGIONS.map((r) => r.id as string);
   return [...missions].sort((a, b) => {
     const ai = regionOrder.indexOf(a.region_id);
     const bi = regionOrder.indexOf(b.region_id);
@@ -119,57 +119,58 @@ export function MapScreen() {
         </div>
         {selected && (
           <div className="panel map-case-card">
-            <div className="map-case-nav">
-              <button
-                type="button"
-                className="btn ghost map-nav-arrow"
-                aria-label="Previous case"
-                onClick={() => goRelative(-1)}
-                disabled={ordered.length < 2}
-              >
-                ←
-              </button>
-              <span className="map-case-index">
-                {selectedIndex + 1} / {ordered.length}
-              </span>
-              <button
-                type="button"
-                className="btn ghost map-nav-arrow"
-                aria-label="Next case"
-                onClick={() => goRelative(1)}
-                disabled={ordered.length < 2}
-              >
-                →
-              </button>
-            </div>
-            <div className="chip-row" style={{ marginBottom: "0.5rem" }}>
-              <span
-                className={`chip ${
-                  selected.status === "open" ? "open" : "settled"
-                }`}
-              >
-                {statusLabel(selected.status)}
-              </span>
-              <span className="chip">{regionName(selected.region_id)}</span>
-            </div>
-            <h3 className="panel-title">{selected.title}</h3>
-            <p className="objective-inline">
-              <span className="objective-label">{COPY.objectiveLabel}</span>
-              {selected.public_brief}
-            </p>
-            <p className="panel-sub">{regionLore(selected.region_id)}</p>
             <button
               type="button"
-              className="btn"
-              onClick={() =>
-                selected.status === "settled"
-                  ? openDebrief(selected.id)
-                  : openBrief(selected.id)
-              }
+              className="map-nav-chevron"
+              aria-label="Previous case"
+              onClick={() => goRelative(-1)}
+              disabled={ordered.length < 2}
             >
-              {selected.status === "settled"
-                ? COPY.debriefTitle
-                : COPY.briefingTitle}
+              ‹
+            </button>
+            <div className="map-case-body">
+              <div className="map-case-meta">
+                <span className="map-case-index">
+                  {selectedIndex + 1} / {ordered.length}
+                </span>
+                <span
+                  className={`chip ${
+                    selected.status === "open" ? "open" : "settled"
+                  }`}
+                >
+                  {statusLabel(selected.status)}
+                </span>
+                <span className="chip">{regionName(selected.region_id)}</span>
+              </div>
+              <h3 className="map-case-title">{selected.title}</h3>
+              <p className="objective-inline">
+                <span className="objective-label">{COPY.objectiveLabel}</span>
+                {selected.public_brief}
+              </p>
+              <div className="map-case-actions">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() =>
+                    selected.status === "settled"
+                      ? openDebrief(selected.id)
+                      : openBrief(selected.id)
+                  }
+                >
+                  {selected.status === "settled"
+                    ? COPY.debriefTitle
+                    : COPY.briefingTitle}
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="map-nav-chevron"
+              aria-label="Next case"
+              onClick={() => goRelative(1)}
+              disabled={ordered.length < 2}
+            >
+              ›
             </button>
           </div>
         )}
