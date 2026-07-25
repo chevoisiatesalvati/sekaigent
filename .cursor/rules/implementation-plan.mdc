@@ -142,4 +142,9 @@ Region select covers all map lobby pins.
 Deployed SekaiAgent and MissionVault to 0G Mainnet; addresses recorded in deployments/mainnet.
 Bytecode verified on-chain via cast code; explorer links in status.json.
 
-### 5.2–5.5 — Pending
+### 5.2 — Done
+
+Uploaded sealed agent intel to 0G Storage and minted SekaiAgent tokenId 1 on mainnet.
+Fixed OgStorageClient to attach JsonRpcProvider; recorded first-agent.json.
+
+### 5.3–5.5 — Pending

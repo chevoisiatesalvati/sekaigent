@@ -1,0 +1,11 @@
+{
+  "tokenId": "1",
+  "owner": "0x517A4221825c816dbe8685aD2eA802E5e1467Bf8",
+  "encryptedURI": "0g://0xf03474157b6219a3d6f4cad9e129bbe45a38ae15ff0a5f1720d1656dd68aef18",
+  "storageRootHash": "0xf03474157b6219a3d6f4cad9e129bbe45a38ae15ff0a5f1720d1656dd68aef18",
+  "storageTxHash": "0x960eceede8814537406789ead8782f265fc92a5229a42736a31eb56247883e1f",
+  "mintTxHash": "0x1948a210b0dae130de3174d60ae0e5ebcde704455fc1ce43bded902704b1e63b",
+  "mintBlock": "39784507",
+  "agentContract": "0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0",
+  "explorer": "https://chainscan.0g.ai/tx/0x1948a210b0dae130de3174d60ae0e5ebcde704455fc1ce43bded902704b1e63b"
+}

@@ -1,5 +1,5 @@
 import { Indexer, MemData } from "@0gfoundation/0g-storage-ts-sdk";
-import { Wallet } from "ethers";
+import { JsonRpcProvider, Wallet } from "ethers";
 import {
   openSealedJson,
   sealJson,
@@ -46,6 +46,7 @@ export class OgStorageClient {
   constructor(
     private readonly indexerUrl: string = OG_MAINNET.storageIndexer,
     private readonly rpcUrl: string = OG_MAINNET.rpc,
+    private readonly chainId: number = OG_MAINNET.chainId,
   ) {}
 
   /**
@@ -60,7 +61,8 @@ export class OgStorageClient {
     const bytes = sealedToBytes(sealed);
     const file = new MemData(Buffer.from(bytes));
     const indexer = new Indexer(this.indexerUrl);
-    const signer = new Wallet(privateKey);
+    const provider = new JsonRpcProvider(this.rpcUrl, this.chainId ?? 16661);
+    const signer = new Wallet(privateKey, provider);
     // ethers ESM/CJS Signer type mismatch across SDK boundary
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [result, error] = await indexer.upload(

@@ -3,7 +3,7 @@
   "chainId": 16661,
   "phase5": {
     "deploy": "done",
-    "mint": "pending",
+    "mint": "done",
     "missionPlay": "pending",
     "settleAudit": "pending",
     "mcp": {
@@ -20,5 +20,6 @@
     "SekaiAgent": "https://chainscan.0g.ai/address/0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0",
     "MissionVault": "https://chainscan.0g.ai/address/0xECEb0d92Ce37Fa48922991aFa70460D9c62666df"
   },
-  "updatedAt": "2026-07-25T00:00:00.000Z"
+  "updatedAt": "2026-07-25T00:00:00.000Z",
+  "firstAgent": "deployments/mainnet/first-agent.json"
 }
