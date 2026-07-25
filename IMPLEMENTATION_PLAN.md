@@ -361,3 +361,8 @@ Phase 5 E2E complete on 0G Mainnet.
 
 Added player copy/format helpers, curated portrait catalog + SVG assets, local squad/field stores.
 Ops shell CSS, HQ/Squad/Missions/Bureau nav (admin unlisted), route skeleton for game IA.
+
+### 6.2 — Done
+
+Built Squad roster with seeded demo operatives, dossier detail + tradecraft meters.
+Recruit wizard with archetype-biased skills and curated portrait picker (wallet-gated).

@@ -1,20 +1,22 @@
 import Link from "next/link";
+import { SquadRoster } from "@/components/SquadRoster";
 import { COPY } from "@/lib/copy";
 
-/** Placeholder until 6.2 squad roster. */
 export default function SquadPage() {
   return (
     <main className="stack">
       <div className="page-head">
         <div>
           <h1>{COPY.squadTitle}</h1>
-          <p className="muted">Manage your operatives.</p>
+          <p className="muted" style={{ margin: 0 }}>
+            Your operatives. Pick a dossier, read the tradecraft, send them out.
+          </p>
         </div>
-        <Link className="btn" href="/squad/recruit">
+        <Link className="btn signal" href="/squad/recruit">
           Recruit
         </Link>
       </div>
-      <p className="muted">Roster loading…</p>
+      <SquadRoster />
     </main>
   );
 }
