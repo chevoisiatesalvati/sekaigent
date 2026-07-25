@@ -30,7 +30,10 @@ KB alwaysApply rules align agents to mainnet MVP scope.
 Scaffolded npm workspaces (apps/web, apps/api, packages/game-schemas, packages/sdk) plus contracts/docs/deployments.
 Workspace install completes cleanly with shared tsconfig.base.json.
 
-### 0.5 — Pending
+### 0.5 — Done
+
+Implemented Zod schemas for Agent, Mission, MissionPlay, MissionEvaluation, rubric maxes, and payout BPS.
+Unit tests cover parse/reject paths for each schema.
 
 ## Phase 1 — Contracts
 

@@ -160,7 +160,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 | **0.2** | Root `.gitignore` + `.env.example` | Done |
 | **0.3** | `cursor_project_rules/` KB | Done |
 | **0.4** | Monorepo workspaces scaffold | Done |
-| **0.5** | `packages/game-schemas` Zod/TS + tests | Pending |
+| **0.5** | `packages/game-schemas` Zod/TS + tests | Done |
 
 ### Phase 1 — Contracts (0G Mainnet)
 
@@ -239,3 +239,8 @@ KB alwaysApply rules align agents to mainnet MVP scope.
 
 Scaffolded npm workspaces (apps/web, apps/api, packages/game-schemas, packages/sdk) plus contracts/docs/deployments.
 Workspace install completes cleanly with shared tsconfig.base.json.
+
+### 0.5 — Done
+
+Implemented Zod schemas for Agent, Mission, MissionPlay, MissionEvaluation, rubric maxes, and payout BPS.
+Unit tests cover parse/reject paths for each schema.
