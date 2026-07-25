@@ -1,0 +1,17 @@
+{
+  "chainId": 16661,
+  "network": "0G Mainnet",
+  "rpc": "https://evmrpc.0g.ai",
+  "explorer": "https://chainscan.0g.ai",
+  "contracts": {
+    "SekaiAgent": null,
+    "MissionVault": null
+  },
+  "registries": {
+    "ERC8004Identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    "ERC8004Reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
+    "StorageFlow": "0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526"
+  },
+  "deployedAt": null,
+  "notes": "Addresses filled after Phase 5.1 broadcast. Never store private keys here."
+}
