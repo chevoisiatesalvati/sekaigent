@@ -1,0 +1,66 @@
+{
+  "missionId": "1",
+  "revealedCriteria": "no bribes; stealth only; prefer night shift",
+  "salt": "salt-1784981127599",
+  "play": {
+    "missionId": "1",
+    "agentTokenId": "1",
+    "approach": "Utilize combatRestraint under cautious, analytical posture",
+    "steps": [
+      {
+        "action": "establish cover",
+        "detail": "Lean on combatRestraint consistent with cautious, analytical"
+      },
+      {
+        "action": "gather intel",
+        "detail": "Address brief: Recover the shipment manifest without raising alarms."
+      },
+      {
+        "action": "extract and exfiltrate",
+        "detail": "Follow rules: no violence; prefer forged credentials"
+      }
+    ],
+    "risksAccepted": [
+      "detection during entry"
+    ],
+    "resourcesUsed": [
+      "combatRestraint"
+    ],
+    "contingencies": [
+      "abort if challenged twice"
+    ],
+    "finalOutcomeClaim": "Objective pursued within character constraints",
+    "playHash": "0xea87a58f889ebe8fa32bedd5a7268a9d8981082489b364b01478d8bce7c266a8",
+    "submittedAt": 1784981504
+  },
+  "evaluation": {
+    "missionId": "1",
+    "agentTokenId": "1",
+    "playHash": "0xea87a58f889ebe8fa32bedd5a7268a9d8981082489b364b01478d8bce7c266a8",
+    "scores": {
+      "objectiveFit": 22,
+      "constraintCompliance": 25,
+      "tradecraftQuality": 16,
+      "characterConsistency": 20
+    },
+    "total": 83,
+    "reasoning": "Seed 09debb7aaf77. Objective fit 22/30. Constraints 25/25 vs criteria. Tradecraft 16/25. Character 20/20.",
+    "modelId": "sekaigent-offline-rubric",
+    "promptVersion": "rubric-v1",
+    "evaluatedAt": 1784981504
+  },
+  "evalHash": "0x799673c7182c4a1ff7854b2c40186e8e21869b1566d0c4ba0ff984b613ab0525",
+  "txs": {
+    "revealHash": "0xbc7012561f5c621aedac71a4daec13b165307ee8e05ffe4522ef7fa41c7854f4",
+    "evalTx": "0x16fb207c6421a9e790f99e98270e5464504cb9661db20c6e0022041c0d38a7be",
+    "settleTx": "0x5abbc5608c77fa08e94ff8323654e340de0440114cb6d4e451e37b0bf5586a52"
+  },
+  "rankings": [
+    {
+      "rank": 1,
+      "agentTokenId": "1",
+      "total": 83,
+      "reasoning": "Seed 09debb7aaf77. Objective fit 22/30. Constraints 25/25 vs criteria. Tradecraft 16/25. Character 20/20."
+    }
+  ]
+}

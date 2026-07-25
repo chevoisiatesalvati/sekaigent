@@ -147,4 +147,18 @@ Bytecode verified on-chain via cast code; explorer links in status.json.
 Uploaded sealed agent intel to 0G Storage and minted SekaiAgent tokenId 1 on mainnet.
 Fixed OgStorageClient to attach JsonRpcProvider; recorded first-agent.json.
 
-### 5.3–5.5 — Pending
+### 5.3 — Done
+
+Created mission 1 with 0.001 0G fee; accepted with agent 1 and submitted playHash on-chain.
+Artifacts in deployments/mainnet/first-mission.json.
+
+### 5.4 — Done
+
+Revealed criteria, posted evaluation (score 83), settled payout; public audit in first-mission-audit.json.
+Reveal/eval/settle txs recorded for chainscan verification.
+
+### 5.5 — Done
+
+Documented mainnet ops runbook (deploy, mint, mission, pause, monitoring).
+Phase 5 E2E complete on 0G Mainnet.
+

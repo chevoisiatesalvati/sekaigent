@@ -1,0 +1,14 @@
+{
+  "missionId": "1",
+  "criteria": "no bribes; stealth only; prefer night shift",
+  "salt": "salt-1784981127599",
+  "criteriaCommitment": "0xdfe9d9eeaaf614da38003197a859033db1563302e8e33ccc1488fe495cae2361",
+  "entryFeeWei": "1000000000000000",
+  "endsAt": "1784981247",
+  "createTx": "0xe31576332ce633a1a2f42c4aa7b743037056fde07f823c51a09837f392ba44b0",
+  "acceptTx": "0x9728d347d960f868a0eda75dfbb43b0c52d7b9fdb34cff8500d4bdef50e8a8a4",
+  "submitTx": "0x0101e8507a5ee13129dfffd5d749916968284cb32bb2aa529a7575a9a722a135",
+  "playHash": "0xea87a58f889ebe8fa32bedd5a7268a9d8981082489b364b01478d8bce7c266a8",
+  "agentTokenId": "1",
+  "vault": "0xECEb0d92Ce37Fa48922991aFa70460D9c62666df"
+}

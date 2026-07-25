@@ -206,9 +206,9 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 |-----|------|--------|
 | **5.1** | Deploy contracts to mainnet | Done |
 | **5.2** | Mint first mainnet agent | Done |
-| **5.3** | First mission accept and play | Pending |
-| **5.4** | Settle and publish audit | Pending |
-| **5.5** | Mainnet ops runbook | Pending |
+| **5.3** | First mission accept and play | Done |
+| **5.4** | Settle and publish audit | Done |
+| **5.5** | Mainnet ops runbook | Done |
 
 ---
 

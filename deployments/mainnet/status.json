@@ -4,8 +4,8 @@
   "phase5": {
     "deploy": "done",
     "mint": "done",
-    "missionPlay": "pending",
-    "settleAudit": "pending",
+    "missionPlay": "done",
+    "settleAudit": "done",
     "mcp": {
       "network": "0G-Mainnet",
       "walletConnected": false,
@@ -21,5 +21,7 @@
     "MissionVault": "https://chainscan.0g.ai/address/0xECEb0d92Ce37Fa48922991aFa70460D9c62666df"
   },
   "updatedAt": "2026-07-25T00:00:00.000Z",
-  "firstAgent": "deployments/mainnet/first-agent.json"
+  "firstAgent": "deployments/mainnet/first-agent.json",
+  "firstMission": "deployments/mainnet/first-mission.json",
+  "firstMissionAudit": "deployments/mainnet/first-mission-audit.json"
 }

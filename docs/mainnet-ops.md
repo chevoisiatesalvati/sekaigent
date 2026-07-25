@@ -85,3 +85,13 @@ If anything looks wrong:
 ## Current status
 
 See [`deployments/mainnet/status.json`](../deployments/mainnet/status.json). Broadcast steps remain blocked until deployer/relayer keys and MCP wallet funding are available in the environment.
+
+
+## Live deployment (2026-07-25)
+
+| Contract | Address |
+|----------|---------|
+| SekaiAgent | `0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0` |
+| MissionVault | `0xECEb0d92Ce37Fa48922991aFa70460D9c62666df` |
+
+First agent tokenId `1`. First mission id `1` settled with audit at `deployments/mainnet/first-mission-audit.json`.
