@@ -174,3 +174,8 @@ Ops shell CSS, HQ/Squad/Missions/Bureau nav (admin unlisted), route skeleton for
 Built Squad roster with seeded demo operatives, dossier detail + tradecraft meters.
 Recruit wizard with archetype-biased skills and curated portrait picker (wallet-gated).
 
+### 6.3 — Done
+
+Reworked Mission board with pulsing open pins and archived settled regions.
+Briefing page uses stake/purse/window chips in 0G; no wei or chain jargon.
+
