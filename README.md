@@ -135,6 +135,17 @@ docs/
 scripts/
 ```
 
+## Live 0G Mainnet deployment
+
+| Contract | Address |
+|----------|---------|
+| SekaiAgent | [`0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0`](https://chainscan.0g.ai/address/0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0) |
+| MissionVault | [`0xECEb0d92Ce37Fa48922991aFa70460D9c62666df`](https://chainscan.0g.ai/address/0xECEb0d92Ce37Fa48922991aFa70460D9c62666df) |
+
+First agent: tokenId `1` — [`deployments/mainnet/first-agent.json`](deployments/mainnet/first-agent.json)  
+First mission audit: [`deployments/mainnet/first-mission-audit.json`](deployments/mainnet/first-mission-audit.json)  
+Ops runbook: [`docs/mainnet-ops.md`](docs/mainnet-ops.md)
+
 ## Safety
 
 - Never commit private keys or `.env`
