@@ -166,7 +166,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 
 | Sub | Work | Status |
 |-----|------|--------|
-| **1.1** | Foundry + mainnet config | Pending |
+| **1.1** | Foundry + mainnet config | Done |
 | **1.2** | SekaiAgent ERC-7857 mint | Pending |
 | **1.3** | MissionVault lifecycle | Pending |
 | **1.4** | Evaluation settle and payouts | Pending |
@@ -244,3 +244,8 @@ Workspace install completes cleanly with shared tsconfig.base.json.
 
 Implemented Zod schemas for Agent, Mission, MissionPlay, MissionEvaluation, rubric maxes, and payout BPS.
 Unit tests cover parse/reject paths for each schema.
+
+### 1.1 — Done
+
+Initialized Foundry in contracts/ with solc 0.8.24, remappings, forge-std, and OpenZeppelin.
+Configured RPC endpoint placeholder for 0G Mainnet (chain ID 16661); forge build passes.

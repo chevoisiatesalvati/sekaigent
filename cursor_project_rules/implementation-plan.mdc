@@ -37,7 +37,12 @@ Unit tests cover parse/reject paths for each schema.
 
 ## Phase 1 — Contracts
 
-### 1.1–1.5 — Pending
+### 1.1 — Done
+
+Initialized Foundry in contracts/ with solc 0.8.24, remappings, forge-std, and OpenZeppelin.
+Configured RPC endpoint placeholder for 0G Mainnet (chain ID 16661); forge build passes.
+
+### 1.2–1.5 — Pending
 
 ## Phase 2 — Backend API
 
