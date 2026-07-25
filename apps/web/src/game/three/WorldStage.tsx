@@ -1,12 +1,28 @@
 "use client";
 
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { Html, OrbitControls, Stars } from "@react-three/drei";
-import { Suspense, useMemo, useRef } from "react";
-import { TextureLoader, SRGBColorSpace, type Group } from "three";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Billboard, OrbitControls, Stars, Text } from "@react-three/drei";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import {
+  TextureLoader,
+  SRGBColorSpace,
+  Vector3,
+  type Group,
+  type Object3D,
+} from "three";
 import { REGIONS, type MissionListItem } from "@/lib/api";
+import { WebglDispose } from "./WebglDispose";
+
+type ControlsLike = {
+  target: Vector3;
+  update: () => void;
+};
 
 const EARTH_TEXTURE = "/textures/earth-day.jpg";
+const DEFAULT_CAMERA_DISTANCE = 4.2;
+const PIN_RADIUS = 1.52;
+/** Labels sit further out than the pin along the same radial ray (closer to PIN_RADIUS = nearer the marker). */
+const LABEL_RADIUS = 1.62;
 
 type WorldStageProps = {
   missions: MissionListItem[];
@@ -14,7 +30,8 @@ type WorldStageProps = {
   onSelectMission: (missionId: string) => void;
 };
 
-const REGION_SPHERE: Record<string, [number, number]> = {
+/** Lat/lon for region pins on the textured sphere. */
+export const REGION_SPHERE: Record<string, [number, number]> = {
   harbor: [-35, 20],
   embassy: [10, 45],
   archive: [55, 15],
@@ -31,6 +48,113 @@ function latLonToVec(lat: number, lon: number, radius: number) {
   ] as [number, number, number];
 }
 
+/** One-shot camera move when the selected case changes; manual orbit stays free after. */
+function CameraFocus({
+  selectedMissionId,
+  missions,
+}: {
+  selectedMissionId: string | null;
+  missions: MissionListItem[];
+}) {
+  const camera = useThree((s) => s.camera);
+  const lastFocusedId = useRef<string | null>(null);
+  const anim = useRef<{
+    from: Vector3;
+    to: Vector3;
+    t: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!selectedMissionId) return;
+    if (lastFocusedId.current === selectedMissionId) return;
+    lastFocusedId.current = selectedMissionId;
+
+    const mission = missions.find((m) => m.id === selectedMissionId);
+    if (!mission) return;
+    const [lat, lon] = REGION_SPHERE[mission.region_id] ?? [0, 0];
+    const distance = Math.max(
+      camera.position.length(),
+      DEFAULT_CAMERA_DISTANCE,
+    );
+    const [x, y, z] = latLonToVec(lat, lon, distance);
+    anim.current = {
+      from: camera.position.clone(),
+      to: new Vector3(x, y, z),
+      t: 0,
+    };
+  }, [selectedMissionId, missions, camera]);
+
+  useFrame((state, delta) => {
+    if (!anim.current) return;
+    anim.current.t = Math.min(1, anim.current.t + delta * 2.2);
+    const ease = 1 - (1 - anim.current.t) ** 3;
+    state.camera.position.lerpVectors(
+      anim.current.from,
+      anim.current.to,
+      ease,
+    );
+    state.camera.lookAt(0, 0, 0);
+    const controls = state.controls as ControlsLike | null;
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+    if (anim.current.t >= 1) {
+      anim.current = null;
+    }
+  });
+
+  return null;
+}
+
+/** Keep label drawn above the globe, but only when the pin faces the camera. */
+function PinLabel({
+  labelOffset,
+  name,
+  selected,
+}: {
+  labelOffset: [number, number, number];
+  name: string;
+  selected: boolean;
+}) {
+  const root = useRef<Object3D>(null);
+  const worldPos = useMemo(() => new Vector3(), []);
+  const outward = useMemo(() => new Vector3(), []);
+  const toCamera = useMemo(() => new Vector3(), []);
+
+  useFrame(({ camera }) => {
+    if (!root.current) return;
+    root.current.getWorldPosition(worldPos);
+    outward.copy(worldPos).normalize();
+    toCamera.copy(camera.position).sub(worldPos).normalize();
+    // Hide labels on the far hemisphere so they never read "through" the globe.
+    root.current.visible = outward.dot(toCamera) > 0.12;
+  });
+
+  return (
+    <group ref={root}>
+      <Billboard follow position={labelOffset}>
+        <Text
+          fontSize={0.048}
+          color={selected ? "#e0c06a" : "#c5cdc6"}
+          outlineWidth={0.006}
+          outlineColor="#050807"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={0.7}
+          textAlign="center"
+          depthOffset={-2}
+          renderOrder={10}
+          material-depthTest={false}
+          material-depthWrite={false}
+        >
+          {name}
+        </Text>
+      </Billboard>
+    </group>
+  );
+}
+
 function TexturedGlobe({
   missions,
   selectedMissionId,
@@ -40,21 +164,22 @@ function TexturedGlobe({
   const earthMap = useLoader(TextureLoader, EARTH_TEXTURE);
   earthMap.colorSpace = SRGBColorSpace;
 
-  useFrame((_, delta) => {
-    if (globeGroup.current) {
-      globeGroup.current.rotation.y += delta * 0.06;
-    }
-  });
-
   const pins = useMemo(() => {
     return REGIONS.map((region) => {
       const [lat, lon] = REGION_SPHERE[region.id] ?? [0, 0];
-      const position = latLonToVec(lat, lon, 1.52);
+      const position = latLonToVec(lat, lon, PIN_RADIUS);
+      // Local offset from pin group → further along the same radial ray.
+      const lift = LABEL_RADIUS / PIN_RADIUS - 1;
+      const labelOffset: [number, number, number] = [
+        position[0] * lift,
+        position[1] * lift,
+        position[2] * lift,
+      ];
       const regionMissions = missions.filter((m) => m.region_id === region.id);
       const open = regionMissions.find((m) => m.status === "open");
       const settled = regionMissions.find((m) => m.status === "settled");
       const mission = open ?? settled ?? regionMissions[0];
-      return { region, position, mission, open: Boolean(open) };
+      return { region, position, labelOffset, mission, open: Boolean(open) };
     });
   }, [missions]);
 
@@ -77,7 +202,7 @@ function TexturedGlobe({
           roughness={0.2}
         />
       </mesh>
-      {pins.map(({ region, position, mission, open }) => {
+      {pins.map(({ region, position, labelOffset, mission, open }) => {
         const selected = mission?.id === selectedMissionId;
         return (
           <group key={region.id} position={position}>
@@ -106,24 +231,11 @@ function TexturedGlobe({
                 <meshBasicMaterial color="#5a9e72" transparent opacity={0.22} />
               </mesh>
             )}
-            <Html
-              distanceFactor={10}
-              occlude
-              style={{ pointerEvents: "none" }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  color: selected ? "#e0c06a" : "#d8e0d4",
-                  whiteSpace: "nowrap",
-                  textShadow: "0 1px 4px #000",
-                  transform: "translate(-50%, -130%)",
-                  fontFamily: "IBM Plex Sans, sans-serif",
-                }}
-              >
-                {region.name}
-              </div>
-            </Html>
+            <PinLabel
+              labelOffset={labelOffset}
+              name={region.name}
+              selected={selected}
+            />
           </group>
         );
       })}
@@ -134,11 +246,12 @@ function TexturedGlobe({
 export function WorldStage(props: WorldStageProps) {
   return (
     <Canvas
-      camera={{ position: [0, 0.6, 4.2], fov: 42 }}
+      camera={{ position: [0, 0.6, DEFAULT_CAMERA_DISTANCE], fov: 42 }}
       dpr={[1, 1.75]}
-      gl={{ antialias: true, alpha: true }}
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%" }}
     >
+      <WebglDispose />
       <color attach="background" args={["#070b09"]} />
       <ambientLight intensity={0.55} />
       <directionalLight position={[4, 3, 2]} intensity={1.35} color="#fff6e8" />
@@ -148,10 +261,15 @@ export function WorldStage(props: WorldStageProps) {
         <TexturedGlobe {...props} />
       </Suspense>
       <OrbitControls
+        makeDefault
         enablePan={false}
         minDistance={3.2}
         maxDistance={6}
         autoRotate={false}
+      />
+      <CameraFocus
+        selectedMissionId={props.selectedMissionId}
+        missions={props.missions}
       />
     </Canvas>
   );

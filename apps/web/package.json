@@ -13,6 +13,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@sekaigent/game-schemas": "*",
+    "@sekaigent/sdk": "*",
     "@tanstack/react-query": "^5.69.0",
     "framer-motion": "^12.42.2",
     "next": "^15.2.3",

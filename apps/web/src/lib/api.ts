@@ -108,6 +108,55 @@ export async function createMissionAdmin(
   return res.json();
 }
 
+export type SuggestOrdersPayload = {
+  missionId: string;
+  agentTokenId: string;
+  publicBrief: string;
+  caseLeads: Array<{ id: string; title: string; excerpt: string }>;
+  styleId: string;
+  fallbackId: string;
+  commanderNote?: string;
+  agentIntel: {
+    personality: string;
+    skills: Record<string, number>;
+    behaviorRules: string[];
+    memoryDigest: string;
+  };
+  wordBudgetMax: number;
+};
+
+export type SuggestOrdersResponse = {
+  play: {
+    approach: string;
+    steps: Array<{ action: string; detail: string }>;
+    risksAccepted: string[];
+    resourcesUsed: string[];
+    contingencies: string[];
+    finalOutcomeClaim: string;
+    missionId?: string;
+    agentTokenId?: string;
+    playHash?: string;
+    submittedAt?: number;
+  };
+  source: "compute" | "offline";
+};
+
+export async function suggestOrders(
+  payload: SuggestOrdersPayload,
+): Promise<SuggestOrdersResponse | null> {
+  try {
+    const res = await fetch(`${API_URL}/play/suggest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as SuggestOrdersResponse;
+  } catch {
+    return null;
+  }
+}
+
 const HARBOR_CASE: CaseDocument[] = [
   {
     id: "h1",
@@ -213,7 +262,7 @@ export const MOCK_MISSIONS: MissionListItem[] = [
     region_id: "harbor",
     title: "Harbor Manifest",
     public_brief:
-      "Something left Pier 7's cage tonight. Recover the shipment manifest without raising alarms.",
+      "Recover Pier 7’s shipment manifest tonight — without raising alarms.",
     duration: "daily",
     status: "open",
     entry_fee_wei: "1000000000000000",
@@ -230,7 +279,7 @@ export const MOCK_MISSIONS: MissionListItem[] = [
     region_id: "embassy",
     title: "Embassy Shadow",
     public_brief:
-      "A courier moves through Neutral Embassy. Identify them without tipping the security detail.",
+      "Identify the Neutral Embassy courier without tipping the security detail.",
     duration: "weekly",
     status: "open",
     entry_fee_wei: "2000000000000000",
@@ -247,7 +296,7 @@ export const MOCK_MISSIONS: MissionListItem[] = [
     region_id: "archive",
     title: "Ash Ledger",
     public_brief:
-      "Lift the redacted ledger page before the night clerk returns.",
+      "Lift the redacted ledger page from the archive before the night clerk returns.",
     duration: "daily",
     status: "settled",
     entry_fee_wei: "1000000000000000",

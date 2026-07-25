@@ -281,3 +281,25 @@ Missions/debrief prefer API with mock case-file fallback; audit surfaces solutio
 
 Wrong-network / no-role copy in mint and seal paths; admin remains API-first.
 
+## Phase 10 — Guided Mission Orders (Choice Desk + 0G Compute)
+
+### 10.1 — Done
+
+Choice model (leads / style / fallback) + `assembleMissionPlayFromChoices` in `@sekaigent/sdk`.
+Unit tests cover schema-valid plays within word budget and Router offline fallback.
+
+### 10.2 — Done
+
+Orders Desk UI replaces free-text loadout: mark dossier leads, style chips, fallback chip, preview.
+Local assemble wired on Brief operative; seal path unchanged.
+
+### 10.3 — Done
+
+Nest `POST /play/suggest` via 0G Compute Router (`openai` → `router-api.0g.ai/v1`).
+Web `suggestOrders` + offline desk draft when key missing or request fails; Router env in `.env.example`.
+
+### 10.4 — Done
+
+Briefing motion, offline toast, glossary copy for choice desk; Phase 10 logged complete.
+Router ops notes updated in `docs/0g-compute-mcp.md`.
+

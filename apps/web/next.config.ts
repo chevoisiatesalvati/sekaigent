@@ -5,7 +5,7 @@ const stub = path.join(__dirname, "stubs/empty.js");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@sekaigent/game-schemas"],
+  transpilePackages: ["@sekaigent/game-schemas", "@sekaigent/sdk"],
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

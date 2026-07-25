@@ -19,6 +19,10 @@ import { useUiStore } from "../stores/uiStore";
 import { useSquadStore, agentPortraitSrc } from "../stores/squadStore";
 import { useFieldStore } from "../stores/fieldStore";
 import { useLoadoutStore } from "../stores/loadoutStore";
+import {
+  useDossierMarksStore,
+  type PageMark,
+} from "../stores/dossierMarksStore";
 import type { CaseDocument } from "@sekaigent/game-schemas";
 
 const KIND_LABEL: Record<string, string> = {
@@ -41,6 +45,11 @@ export function BriefScreen() {
   const getForMission = useFieldStore((s) => s.getForMission);
   const getActiveForAgent = useFieldStore((s) => s.getActiveForAgent);
   const beginLoadout = useLoadoutStore((s) => s.begin);
+  const setMark = useDossierMarksStore((s) => s.setMark);
+  const clearMark = useDossierMarksStore((s) => s.clearMark);
+  const marksFor = useDossierMarksStore((s) => s.marksFor);
+  const signalIds = useDossierMarksStore((s) => s.signalIds);
+  const noiseIds = useDossierMarksStore((s) => s.noiseIds);
   const { isConnected } = useAccount();
 
   const [mission, setMission] = useState<MissionListItem | null>(
@@ -86,10 +95,28 @@ export function BriefScreen() {
   const readyAgents = agents.filter((a) => !getActiveForAgent(a.id));
   const selected =
     agents.find((a) => a.id === selectedAgentId) ?? readyAgents[0] ?? null;
+  const marks = marksFor(mission.id);
+  const signals = signalIds(mission.id);
+  const noises = noiseIds(mission.id);
+  const activeMark: PageMark | undefined = activeDoc
+    ? marks[activeDoc.id]
+    : undefined;
+  const canStartOrders = signals.length >= 1 && signals.length <= 4;
+
+  function applyMark(mark: PageMark) {
+    if (!activeDoc) return;
+    if (marks[activeDoc.id] === mark) {
+      clearMark(mission!.id, activeDoc.id);
+      return;
+    }
+    setMark(mission!.id, activeDoc.id, mark);
+  }
 
   function startOrders() {
-    if (!selected || !isConnected || agents.length === 0) return;
-    beginLoadout(mission!, selected);
+    if (!selected || !isConnected || agents.length === 0 || !canStartOrders) {
+      return;
+    }
+    beginLoadout(mission!, selected, signals);
     openLoadout(mission!.id);
   }
 
@@ -106,6 +133,11 @@ export function BriefScreen() {
         {COPY.briefingTitle}
       </h2>
       <p className="panel-sub">{mission.title}</p>
+
+      <div className="objective-banner" role="region" aria-label="Objective">
+        <span className="objective-label">{COPY.objectiveLabel}</span>
+        <p className="objective-text">{mission.public_brief}</p>
+      </div>
 
       <div className="chip-row" style={{ marginBottom: "0.85rem" }}>
         <span
@@ -129,31 +161,40 @@ export function BriefScreen() {
       </div>
 
       <p className="panel-sub">{regionLore(mission.region_id)}</p>
-      <p style={{ marginBottom: "1rem" }}>{mission.public_brief}</p>
 
       <div className="panel" style={{ marginBottom: "1rem" }}>
         <h3 className="panel-title">Dossier</h3>
-        <p className="panel-sub">
-          Read carefully. Some pages matter. Some are noise. Your orders should
-          show you know which is which.
+        <p className="panel-sub">{COPY.dossierMarkHelp}</p>
+        <p className="empty-note" style={{ marginBottom: "0.65rem" }}>
+          Marked Signal {signals.length}/4 · Noise {noises.length}
         </p>
         {docs.length === 0 ? (
           <p className="empty-note">No dossier pages on this case yet.</p>
         ) : (
           <div className="dossier-layout">
             <div className="dossier-nav">
-              {docs.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  className={`dossier-doc-btn${
-                    activeDoc?.id === d.id ? " active" : ""
-                  }`}
-                  onClick={() => setDocId(d.id)}
-                >
-                  {d.title}
-                </button>
-              ))}
+              {docs.map((d) => {
+                const mark = marks[d.id];
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    className={`dossier-doc-btn${
+                      activeDoc?.id === d.id ? " active" : ""
+                    }${mark === "signal" ? " mark-signal" : ""}${
+                      mark === "noise" ? " mark-noise" : ""
+                    }`}
+                    onClick={() => setDocId(d.id)}
+                  >
+                    {d.title}
+                    {mark ? (
+                      <span className="dossier-mark-badge">
+                        {mark === "signal" ? "Signal" : "Noise"}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
             </div>
             {activeDoc && (
               <div className="dossier-body">
@@ -162,6 +203,31 @@ export function BriefScreen() {
                 </div>
                 <strong>{activeDoc.title}</strong>
                 <p style={{ marginTop: "0.65rem" }}>{activeDoc.body}</p>
+                <div className="dossier-mark-row">
+                  <span className="empty-note">
+                    Does this help the objective?
+                  </span>
+                  <div className="chip-row">
+                    <button
+                      type="button"
+                      className={`chip choice-chip mark-signal-chip${
+                        activeMark === "signal" ? " selected" : ""
+                      }`}
+                      onClick={() => applyMark("signal")}
+                    >
+                      {COPY.markSignal}
+                    </button>
+                    <button
+                      type="button"
+                      className={`chip choice-chip mark-noise-chip${
+                        activeMark === "noise" ? " selected" : ""
+                      }`}
+                      onClick={() => applyMark("noise")}
+                    >
+                      {COPY.markNoise}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -219,10 +285,13 @@ export function BriefScreen() {
                 No free operatives — wait for a return or hire another.
               </p>
             )}
+            {!canStartOrders && (
+              <p className="empty-note">{COPY.needSignalToBrief}</p>
+            )}
             <button
               type="button"
               className="btn"
-              disabled={!selected || !isConnected}
+              disabled={!selected || !isConnected || !canStartOrders}
               onClick={startOrders}
             >
               {COPY.deployCta}
