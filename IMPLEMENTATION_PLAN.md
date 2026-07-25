@@ -179,7 +179,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 | **2.1** | NestJS + Postgres models | Done |
 | **2.2** | Admin mission authoring | Done |
 | **2.3** | Chain event indexer | Done |
-| **2.4** | Evaluator relayer | Pending |
+| **2.4** | Evaluator relayer | Done |
 
 ### Phase 3 — Play + Eval
 
@@ -284,3 +284,8 @@ Commitment helper verified against cast keccak; create mission returns commitmen
 
 Added chain event indexer service with fixture ingest for MissionCreated/Accepted/PlaySubmitted/Settled.
 Fixture test proves event rows persist in the indexed_events table.
+
+### 2.4 — Done
+
+Wired evaluator relayer dry-run builders for postEvaluation and settle (encode calldata, no broadcast).
+Relayer key read from env only; unit tests cover calldata encoding.
