@@ -158,7 +158,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 |-----|------|--------|
 | **0.1** | Write root IMPLEMENTATION_PLAN.md | Done |
 | **0.2** | Root `.gitignore` + `.env.example` | Done |
-| **0.3** | `cursor_project_rules/` KB | Pending |
+| **0.3** | `cursor_project_rules/` KB | Done |
 | **0.4** | Monorepo workspaces scaffold | Pending |
 | **0.5** | `packages/game-schemas` Zod/TS + tests | Pending |
 
@@ -229,3 +229,8 @@ Initialized git repository for subphase commits.
 
 Expanded .gitignore for secrets, keys, build artifacts, and Foundry broadcast.
 Added .env.example with 0G mainnet placeholders only (no real keys).
+
+### 0.3 — Done
+
+Added cursor_project_rules knowledge base (overview, mechanics, architecture, implementation-plan).
+KB alwaysApply rules align agents to mainnet MVP scope.

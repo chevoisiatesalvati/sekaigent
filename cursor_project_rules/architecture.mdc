@@ -1,0 +1,30 @@
+---
+description: Sekaigent system architecture and package boundaries
+globs:
+alwaysApply: true
+---
+
+# Architecture
+
+## Packages
+
+- `apps/web` — Next.js + wagmi/viem on 0G Mainnet
+- `apps/api` — NestJS + Postgres + Redis (admin, play, eval, indexer)
+- `packages/game-schemas` — shared Zod/TS types
+- `packages/sdk` — contracts helpers + 0G Storage/Compute
+- `contracts` — Foundry: SekaiAgent (ERC-7857), MissionVault
+
+## 0G stack
+
+- Chain 16661: ownership, fees, commitments, rankings, payouts
+- Storage: encrypted agent intel, sealed plays, criteria, evaluations
+- Compute: MissionPlay generation + rubric evaluation (TEE preferred)
+- ERC-8004 registries for public agent cards
+
+## Roles
+
+ADMIN (mission create/reveal), EVALUATOR_RELAYER (post scores / settle), players (accept/submit).
+
+## Secrets
+
+Never commit `.env` or private keys. Use `.env.example` placeholders only.

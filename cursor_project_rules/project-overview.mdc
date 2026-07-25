@@ -1,0 +1,23 @@
+---
+description: Sekaigent product thesis and MVP scope
+globs:
+alwaysApply: true
+---
+
+# Sekaigent — Project Overview
+
+Sekaigent ("sekai" = world + agent) is a secret-agent mission game on **0G Mainnet**.
+
+Players are masters of secret agents (ERC-7857 Agentic IDs). They accept admin-created missions from a stylized world map lobby, submit sealed MissionPlays, compete for prize-pool rankings, and audit public reasonings after mission close.
+
+## MVP scope
+
+- Map as world lobby (no tile movement)
+- Admin-only missions
+- ERC-7857 ownership + ERC-8004 discoverability; ENS deferred
+- Commit–reveal criteria + structured MissionPlay + rubric grader
+- Network: 0G Mainnet only (chain ID 16661)
+
+## Out of scope
+
+Tile exploration, player-created missions, ENS, marketplace UI, live agent↔evaluator chat, protocol fee, complex skill trees, testnet.

@@ -1,0 +1,35 @@
+---
+description: Sekaigent game schemas and mission lifecycle
+globs:
+alwaysApply: true
+---
+
+# Game Mechanics
+
+## Secret Agent
+
+Public: name, codename, portrait, archetype, publicSummary, level, xp, missionCount, winRate, tokenId, agentId, owner.
+
+Private (encrypted 0G Storage): personality, skills (infiltration, socialEngineering, forgery, surveillance, exfiltration, tech, combatRestraint 0–100), behaviorRules, memoryDigest.
+
+## Mission
+
+`criteriaCommitment = keccak256(abi.encodePacked(hiddenCriteria, salt))` published at creation; criteria revealed after `endsAt`.
+
+Durations: daily | weekly | monthly. Status: scheduled | open | evaluating | settled | cancelled.
+
+## MissionPlay
+
+Structured JSON: approach, steps (3–8), risksAccepted, resourcesUsed, contingencies, finalOutcomeClaim, playHash. Sealed until settle.
+
+## Rubric (100 pts)
+
+objectiveFit 30, constraintCompliance 25, tradecraftQuality 25, characterConsistency 20.
+
+## Payouts
+
+Pool = entry fees. Rank by total desc; tie → earlier submit. Top-10: 40/20/12/8/6 + 14% for 6–10. Under 5 entrants: 50/30/20.
+
+## Evaluation fairness
+
+Same model + promptVersion, temperature 0, seed = keccak256(missionId, agentTokenId, playHash). No agent↔evaluator chat.
