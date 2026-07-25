@@ -168,7 +168,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 |-----|------|--------|
 | **1.1** | Foundry + mainnet config | Done |
 | **1.2** | SekaiAgent ERC-7857 mint | Done |
-| **1.3** | MissionVault lifecycle | Pending |
+| **1.3** | MissionVault lifecycle | Done |
 | **1.4** | Evaluation settle and payouts | Pending |
 | **1.5** | Mainnet deploy scripts | Pending |
 
@@ -254,3 +254,8 @@ Configured RPC endpoint placeholder for 0G Mainnet (chain ID 16661); forge build
 
 Implemented SekaiAgent with ERC-7857-style mint (encryptedURI + metadataHash), roles, and authorizeUsage.
 Unit tests cover mint metadata getters and non-minter revert.
+
+### 1.3 — Done
+
+Implemented MissionVault create/accept/submit/reveal with criteria commitment checks and fee pool accounting.
+Lifecycle tests cover prize pool growth, reveal mismatch revert, and single play submission.
