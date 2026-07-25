@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import {
   createWalletClient,
   http,
@@ -8,32 +8,17 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { config } from "../config.js";
-
-const missionVaultAbi = [
-  {
-    type: "function",
-    name: "postEvaluation",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "missionId", type: "uint256" },
-      { name: "agentTokenId", type: "uint256" },
-      { name: "score", type: "uint256" },
-      { name: "evalHash", type: "bytes32" },
-    ],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "settle",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "missionId", type: "uint256" }],
-    outputs: [],
-  },
-] as const;
+import {
+  createOgPublicClient,
+  createOgWalletClient,
+  missionVaultAbi,
+  ogChain,
+} from "../chain/og-chain.js";
 
 @Injectable()
 export class RelayerService {
-  /** Build unsigned/signed tx data without broadcasting (dry-run). */
+  private readonly logger = new Logger(RelayerService.name);
+
   buildPostEvaluationTx(input: {
     missionId: bigint;
     agentTokenId: bigint;
@@ -76,18 +61,66 @@ export class RelayerService {
     };
   }
 
-  /** Sign a dry-run transaction locally; does not broadcast. */
   async signDryRun(tx: TransactionRequest): Promise<Hex | null> {
     if (!config.relayerPrivateKey) return null;
     const account = privateKeyToAccount(config.relayerPrivateKey);
     const client = createWalletClient({
       account,
       transport: http(config.ogRpcUrl),
+      chain: ogChain,
     });
     return client.signTransaction({
       ...tx,
       account,
-      chain: undefined,
+      chain: ogChain,
     });
+  }
+
+  async broadcastPostEvaluation(input: {
+    missionId: bigint;
+    agentTokenId: bigint;
+    score: bigint;
+    evalHash: Hex;
+  }): Promise<{ txHash: Hex }> {
+    if (!config.relayerPrivateKey) {
+      throw new Error("EVALUATOR_RELAYER_PRIVATE_KEY unset");
+    }
+    const wallet = createOgWalletClient(config.relayerPrivateKey);
+    const publicClient = createOgPublicClient();
+    const hash = await wallet.writeContract({
+      address: config.missionVaultAddress,
+      abi: missionVaultAbi,
+      functionName: "postEvaluation",
+      args: [
+        input.missionId,
+        input.agentTokenId,
+        input.score,
+        input.evalHash,
+      ],
+      account: wallet.account!,
+      chain: wallet.chain,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    this.logger.log(`postEvaluation ${receipt.transactionHash}`);
+    return { txHash: receipt.transactionHash };
+  }
+
+  async broadcastSettle(missionId: bigint): Promise<{ txHash: Hex }> {
+    if (!config.relayerPrivateKey) {
+      throw new Error("EVALUATOR_RELAYER_PRIVATE_KEY unset");
+    }
+    const wallet = createOgWalletClient(config.relayerPrivateKey);
+    const publicClient = createOgPublicClient();
+    const hash = await wallet.writeContract({
+      address: config.missionVaultAddress,
+      abi: missionVaultAbi,
+      functionName: "settle",
+      args: [missionId],
+      account: wallet.account!,
+      chain: wallet.chain,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    this.logger.log(`settle ${receipt.transactionHash}`);
+    return { txHash: receipt.transactionHash };
   }
 }

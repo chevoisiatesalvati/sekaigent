@@ -4,16 +4,21 @@ import { create } from "zustand";
 import { getPortrait, skillBiasForArchetype, type Archetype } from "@/lib/portraits";
 import { getPersonalityPreset } from "@/lib/personalities";
 import type { SkillKey } from "@/lib/copy";
+import { USE_MOCKS } from "@/lib/api";
 import {
   SKILL_KEYS,
   SKILL_POINT_BUDGET,
   type SquadAgent,
 } from "../types";
 
-const STORAGE_PREFIX = "sekaigent.squad.v3:";
+const STORAGE_PREFIX = "sekaigent.squad.v4:";
 
 function storageKey(ownerKey: string): string {
   return `${STORAGE_PREFIX}${ownerKey.toLowerCase()}`;
+}
+
+function isDemoAgent(agent: SquadAgent): boolean {
+  return agent.id.startsWith("demo-");
 }
 
 export function ownerStorageKey(address?: string | null): string {
@@ -92,18 +97,31 @@ function demoSquad(): SquadAgent[] {
 }
 
 function loadFromStorage(ownerKey: string): SquadAgent[] {
-  if (typeof window === "undefined") return demoSquad();
+  if (typeof window === "undefined") return USE_MOCKS ? demoSquad() : [];
   try {
+    // Drop legacy demo-seed keys so live mode does not resurrect NIGHTJAR et al.
+    for (const legacy of ["sekaigent.squad.v3:", "sekaigent.squad.v2:"]) {
+      localStorage.removeItem(`${legacy}${ownerKey.toLowerCase()}`);
+    }
     const raw = localStorage.getItem(storageKey(ownerKey));
     if (!raw) {
+      if (!USE_MOCKS) return [];
       const seeded = demoSquad();
       localStorage.setItem(storageKey(ownerKey), JSON.stringify(seeded));
       return seeded;
     }
     const parsed = JSON.parse(raw) as SquadAgent[];
-    return Array.isArray(parsed) ? parsed : demoSquad();
+    if (!Array.isArray(parsed)) {
+      return USE_MOCKS ? demoSquad() : [];
+    }
+    if (USE_MOCKS) return parsed;
+    const liveOnly = parsed.filter((agent) => !isDemoAgent(agent));
+    if (liveOnly.length !== parsed.length) {
+      persist(ownerKey, liveOnly);
+    }
+    return liveOnly;
   } catch {
-    return demoSquad();
+    return USE_MOCKS ? demoSquad() : [];
   }
 }
 
@@ -157,6 +175,9 @@ type SquadState = {
   agents: SquadAgent[];
   hydrated: boolean;
   hydrate: (ownerKey: string) => void;
+  mergeChainAgents: (
+    owned: Array<{ tokenId: string; encryptedURI: string }>,
+  ) => void;
   recruit: (input: RecruitInput) => SquadAgent;
   updateAgent: (agentId: string, patch: Partial<SquadAgent>) => void;
   getAgent: (agentId: string) => SquadAgent | undefined;
@@ -169,6 +190,54 @@ export const useSquadStore = create<SquadState>((set, get) => ({
   hydrate: (ownerKey) => {
     const agents = loadFromStorage(ownerKey);
     set({ ownerKey, agents, hydrated: true });
+  },
+  mergeChainAgents: (owned) => {
+    if (owned.length === 0) return;
+    const current = get().agents;
+    const byToken = new Map(
+      current
+        .filter((a) => a.dossierNumber)
+        .map((a) => [String(a.dossierNumber), a]),
+    );
+    let changed = false;
+    const next = [...current];
+    for (const row of owned) {
+      const existing = byToken.get(row.tokenId);
+      if (existing) {
+        if (!existing.onChain) {
+          const idx = next.findIndex((a) => a.id === existing.id);
+          if (idx >= 0) {
+            next[idx] = { ...existing, onChain: true };
+            changed = true;
+          }
+        }
+        continue;
+      }
+      next.unshift({
+        id: `chain-${row.tokenId}`,
+        name: `Operative ${row.tokenId}`,
+        codename: `AGENT-${row.tokenId}`,
+        archetype: "Infiltrator",
+        portraitId: "inf-01",
+        publicSummary: "On-chain dossier — intel sealed on 0G Storage.",
+        level: 1,
+        xp: 0,
+        missionCount: 0,
+        winRate: 0,
+        skills: clampSkills(skillBiasForArchetype("Infiltrator")),
+        personality: "Classified.",
+        personalityPresetId: "ice-quiet",
+        behaviorRules: [],
+        memoryDigest: row.encryptedURI,
+        dossierNumber: row.tokenId,
+        onChain: true,
+        createdAt: Date.now(),
+      });
+      changed = true;
+    }
+    if (!changed) return;
+    persist(get().ownerKey, next);
+    set({ agents: next });
   },
   recruit: (input) => {
     const portrait = getPortrait(input.portraitId);

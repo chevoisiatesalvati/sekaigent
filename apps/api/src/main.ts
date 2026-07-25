@@ -6,12 +6,16 @@ import { MissionsService } from "./missions/missions.service.js";
 import { dbMode, getPool } from "./db/pool.js";
 
 async function bootstrap(): Promise<void> {
-  await getPool(); // migrate (Postgres or PGlite fallback)
+  await getPool();
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: true });
-  const missions = app.get(MissionsService);
-  const seed = await missions.seedDemoData();
-  console.log(`db=${dbMode()} seed=${JSON.stringify(seed)}`);
+  if (config.seedDemo) {
+    const missions = app.get(MissionsService);
+    const seed = await missions.seedDemoData();
+    console.log(`db=${dbMode()} seed=${JSON.stringify(seed)}`);
+  } else {
+    console.log(`db=${dbMode()} seed=disabled`);
+  }
   await app.listen(config.port);
   console.log(`sekaigent-api listening on :${config.port}`);
   console.log(

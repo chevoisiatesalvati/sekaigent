@@ -60,4 +60,9 @@ export {
   buildEvalSystemPrompt,
   type EvaluateInput,
 } from "./evaluate.js";
+export {
+  evaluateMissionPlayViaRouter,
+  type EvaluateRouterResult,
+  type EvaluateRouterConfig,
+} from "./evaluate-router.js";
 export { runOfflineMissionPipeline, type PipelineResult } from "./pipeline.js";

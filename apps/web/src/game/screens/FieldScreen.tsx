@@ -1,7 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { COPY } from "@/lib/copy";
-import { MOCK_MISSIONS, regionName } from "@/lib/api";
+import {
+  fetchMissions,
+  regionName,
+  type MissionListItem,
+} from "@/lib/api";
 import { useUiStore } from "../stores/uiStore";
 import { useFieldStore } from "../stores/fieldStore";
 import { agentPortraitSrc, useSquadStore } from "../stores/squadStore";
@@ -12,9 +17,27 @@ export function FieldScreen() {
   const openBrief = useUiStore((s) => s.openBrief);
   const openDebrief = useUiStore((s) => s.openDebrief);
   const setScreen = useUiStore((s) => s.setScreen);
+  const [missions, setMissions] = useState<MissionListItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMissions().then((rows) => {
+      if (!cancelled) setMissions(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const active = deployments.filter((d) => d.status === "in_field");
   const past = deployments.filter((d) => d.status === "debriefed");
+
+  function titleFor(missionId: string): MissionListItem | undefined {
+    return (
+      missions.find((m) => m.id === missionId) ??
+      missions.find((m) => String(m.on_chain_id) === missionId)
+    );
+  }
 
   return (
     <div className="screen-scroll">
@@ -32,7 +55,7 @@ export function FieldScreen() {
           )}
           {active.map((d) => {
             const agent = agents.find((a) => a.id === d.agentId);
-            const mission = MOCK_MISSIONS.find((m) => m.id === d.missionId);
+            const mission = titleFor(d.missionId);
             return (
               <li key={d.missionId}>
                 <div
@@ -87,10 +110,12 @@ export function FieldScreen() {
           <ul className="list-quiet">
             {past.map((d) => {
               const agent = agents.find((a) => a.id === d.agentId);
+              const mission = titleFor(d.missionId);
               return (
                 <li key={`${d.missionId}-past`}>
                   <span>
-                    {agent?.codename ?? "Operative"} · {d.missionId}
+                    {agent?.codename ?? "Operative"} ·{" "}
+                    {mission?.title ?? d.missionId}
                   </span>
                   <button
                     type="button"

@@ -11,6 +11,7 @@ import {
 } from "@sekaigent/sdk";
 import { AgentPrivateIntelSchema } from "@sekaigent/game-schemas";
 import { z } from "zod";
+import { config } from "../config.js";
 
 const CaseLeadSchema = z.object({
   id: z.string().min(1),
@@ -48,9 +49,10 @@ export class PlayService {
     };
 
     return suggestMissionPlayViaRouter(input, {
-      apiKey: process.env.OG_COMPUTE_ROUTER_API_KEY,
-      baseURL: process.env.OG_COMPUTE_ROUTER_BASE_URL,
-      model: process.env.OG_COMPUTE_MODEL,
+      apiKey: config.ogComputeRouterApiKey || undefined,
+      baseURL: config.ogComputeRouterBaseUrl,
+      model: config.ogComputeModel,
+      allowOffline: config.allowOfflineOrders,
     });
   }
 }

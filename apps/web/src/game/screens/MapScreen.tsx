@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   fetchMissions,
-  MOCK_MISSIONS,
   REGIONS,
   regionName,
   type MissionListItem,
@@ -28,7 +27,7 @@ function orderMissions(missions: MissionListItem[]): MissionListItem[] {
 }
 
 export function MapScreen() {
-  const [missions, setMissions] = useState<MissionListItem[]>(MOCK_MISSIONS);
+  const [missions, setMissions] = useState<MissionListItem[]>([]);
   const openBrief = useUiStore((s) => s.openBrief);
   const openDebrief = useUiStore((s) => s.openDebrief);
   const selectMission = useUiStore((s) => s.selectMission);

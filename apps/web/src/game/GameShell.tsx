@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { AnimatePresence, motion } from "framer-motion";
 import { WalletButton } from "@/components/WalletButton";
 import { COPY } from "@/lib/copy";
+import { fetchFieldDeployments, fetchOwnedAgents } from "@/lib/api";
 import { useUiStore } from "./stores/uiStore";
 import { ownerStorageKey, useSquadStore } from "./stores/squadStore";
 import { useFieldStore } from "./stores/fieldStore";
@@ -66,9 +67,11 @@ export function GameShell() {
   const screen = useUiStore((s) => s.screen);
   const setScreen = useUiStore((s) => s.setScreen);
   const hydrateSquad = useSquadStore((s) => s.hydrate);
+  const mergeChainAgents = useSquadStore((s) => s.mergeChainAgents);
   const agents = useSquadStore((s) => s.agents);
   const hydratedSquad = useSquadStore((s) => s.hydrated);
   const hydrateField = useFieldStore((s) => s.hydrate);
+  const mergeChainDeployments = useFieldStore((s) => s.mergeChainDeployments);
   const deployments = useFieldStore((s) => s.deployments);
   const didRoute = useRef(false);
 
@@ -78,6 +81,28 @@ export function GameShell() {
     hydrateField(key);
     didRoute.current = false;
   }, [address, hydrateSquad, hydrateField]);
+
+  useEffect(() => {
+    if (!address || !hydratedSquad) return;
+    let cancelled = false;
+    (async () => {
+      const [owned, fieldRows] = await Promise.all([
+        fetchOwnedAgents(address),
+        fetchFieldDeployments(address),
+      ]);
+      if (cancelled) return;
+      mergeChainAgents(owned);
+      mergeChainDeployments(fieldRows, (tokenId) => {
+        const match = useSquadStore
+          .getState()
+          .agents.find((a) => a.dossierNumber === tokenId);
+        return match?.id;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [address, hydratedSquad, mergeChainAgents, mergeChainDeployments]);
 
   useEffect(() => {
     if (!hydratedSquad || didRoute.current) return;

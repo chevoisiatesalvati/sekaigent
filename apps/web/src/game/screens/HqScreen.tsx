@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { COPY } from "@/lib/copy";
+import { fetchMissions, type MissionListItem } from "@/lib/api";
 import { useUiStore } from "../stores/uiStore";
 import { useSquadStore } from "../stores/squadStore";
 import { useFieldStore } from "../stores/fieldStore";
-import { MOCK_MISSIONS } from "@/lib/api";
 
 /** Command hub — one primary next action for the game loop. */
 export function HqScreen() {
@@ -12,7 +13,19 @@ export function HqScreen() {
   const agents = useSquadStore((s) => s.agents);
   const deployments = useFieldStore((s) => s.deployments);
   const active = deployments.filter((d) => d.status === "in_field");
-  const openCases = MOCK_MISSIONS.filter((m) => m.status === "open");
+  const [openCases, setOpenCases] = useState<MissionListItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMissions().then((rows) => {
+      if (!cancelled) {
+        setOpenCases(rows.filter((m) => m.status === "open"));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   let primaryLabel: string = COPY.hqCtaHire;
   let primaryAction = () => setScreen("recruit");

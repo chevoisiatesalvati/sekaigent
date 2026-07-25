@@ -495,3 +495,35 @@ Web `suggestOrders` + offline desk draft when key missing or request fails; Rout
 
 Briefing motion, offline toast, glossary copy for choice desk; Phase 10 logged complete.
 Router ops notes updated in `docs/0g-compute-mcp.md`.
+
+## Phase 11 — Live integration (mocks → mainnet)
+
+### 11.1 — Done
+
+Live MissionVault indexer polls `eth_getLogs`, upserts missions/entrants/plays with block cursor.
+Web Map/Brief/HQ/Field prefer API; `MOCK_MISSIONS` only when `NEXT_PUBLIC_USE_MOCKS=1`.
+
+### 11.2 — Done
+
+Admin create broadcasts `createMission` via `ADMIN_PRIVATE_KEY`; persists `on_chain_id`.
+Admin-guarded `POST /missions/:id/reveal` after `endsAt` → evaluating.
+
+### 11.3 — Done
+
+`POST /storage/seal-agent` and `seal-play` via OgStorageClient (MemoryStorage fallback).
+Recruit mints with `0g://` URI; seal path uploads play + records storage URI for eval.
+
+### 11.4 — Done
+
+Relayer broadcasts `postEvaluation`/`settle`; settle job uses Router rubric (offline fallback).
+Dry-run encode endpoints retained for tests.
+
+### 11.5 — Done
+
+`GET /agents/owned` + `GET /field` hydrate squad/field from chain/indexer for wallet.
+Local desk mint/seal soft paths only when `NEXT_PUBLIC_USE_MOCKS=1`.
+
+### 11.6 — Done
+
+`SEED_DEMO` / mock gates documented in `.env.example` + `docs/mainnet-ops.md`.
+Removed debug memory ingest; Phase 11 logged complete.

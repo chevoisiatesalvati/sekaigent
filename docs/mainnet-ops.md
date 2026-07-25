@@ -78,13 +78,34 @@ If anything looks wrong:
 
 ## Monitoring
 
-- Watch `MissionCreated`, `MissionAccepted`, `PlaySubmitted`, `EvaluationPosted`, `MissionSettled` via API indexer.
+- Watch `MissionCreated`, `MissionAccepted`, `PlaySubmitted`, `EvaluationPosted`, `MissionSettled` via API indexer (`INDEXER_ENABLED=1`).
 - Confirm 0G Storage roots with MCP `storage_info`.
 - Confirm compute providers with MCP `compute_list_providers` + `compute_verify_provider` (TEE).
 
+## Phase 11 — Live ops env matrix
+
+| Var | Role |
+|-----|------|
+| `ADMIN_PRIVATE_KEY` | Nest broadcasts `createMission` + `revealCriteria` after Bureau Ops / API create |
+| `EVALUATOR_RELAYER_PRIVATE_KEY` | Nest settle job: `postEvaluation` + `settle` |
+| `STORAGE_PRIVATE_KEY` (or `DEPLOYER_PRIVATE_KEY`) | `POST /storage/seal-*` → 0G Storage upload |
+| `OG_COMPUTE_ROUTER_API_KEY` | `/play/suggest` + settle rubric (Router, temp 0) |
+| `ALLOW_OFFLINE_ORDERS=0` | Fail suggest when Router unavailable (live-only) |
+| `SEED_DEMO=0` | Do not auto-seed demo missions (default) |
+| `NEXT_PUBLIC_USE_MOCKS=0` | Web does not fall back to `MOCK_MISSIONS` / demo squad |
+| `INDEXER_START_BLOCK` | Backfill from deploy block when first indexing |
+| `AGENT_SEAL_PASSWORD` / `PLAY_SEAL_PASSWORD` | AES-GCM passwords for sealed intel/plays |
+
+Happy path:
+
+1. Bureau Ops → `POST /missions` (admin JWT) → Nest `createMission` on vault → indexer sets `on_chain_id`.
+2. Recruit → `POST /storage/seal-agent` → mint with `0g://` URI.
+3. Orders → Router suggest → seal play → accept+submit → Field from `/field?address=`.
+4. After deadline → `POST /missions/:id/reveal` → settle job grades (Router) → Debrief `/missions/:id/audit`.
+
 ## Current status
 
-See [`deployments/mainnet/status.json`](../deployments/mainnet/status.json). Broadcast steps remain blocked until deployer/relayer keys and MCP wallet funding are available in the environment.
+See [`deployments/mainnet/status.json`](../deployments/mainnet/status.json).
 
 
 ## Live deployment (2026-07-25)

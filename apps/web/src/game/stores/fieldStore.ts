@@ -31,6 +31,15 @@ type FieldState = {
   deployments: FieldDeployment[];
   hydrated: boolean;
   hydrate: (ownerKey: string) => void;
+  mergeChainDeployments: (
+    rows: Array<{
+      missionId: string;
+      agentTokenId: string;
+      playHash: string | null;
+      status: string;
+    }>,
+    resolveAgentId: (tokenId: string) => string | undefined,
+  ) => void;
   deploy: (
     missionId: string,
     agentId: string,
@@ -57,6 +66,54 @@ export const useFieldStore = create<FieldState>((set, get) => ({
       deployments: loadFromStorage(ownerKey),
       hydrated: true,
     });
+  },
+  mergeChainDeployments: (rows, resolveAgentId) => {
+    if (rows.length === 0) return;
+    const current = get().deployments;
+    const byMission = new Map(current.map((d) => [d.missionId, d]));
+    let changed = false;
+    for (const row of rows) {
+      const agentId =
+        resolveAgentId(row.agentTokenId) ?? `chain-agent-${row.agentTokenId}`;
+      const status =
+        row.status === "settled" ? ("debriefed" as const) : ("in_field" as const);
+      const existing = byMission.get(row.missionId);
+      if (existing) {
+        if (
+          existing.playHash !== (row.playHash ?? existing.playHash) ||
+          existing.status !== status
+        ) {
+          byMission.set(row.missionId, {
+            ...existing,
+            agentId,
+            playHash: row.playHash ?? existing.playHash,
+            status,
+          });
+          changed = true;
+        }
+        continue;
+      }
+      byMission.set(row.missionId, {
+        missionId: row.missionId,
+        agentId,
+        status,
+        deployedAt: Date.now(),
+        playDraft: {
+          approach: "",
+          steps: [],
+          risksAccepted: [],
+          resourcesUsed: [],
+          contingencies: [],
+          finalOutcomeClaim: "",
+        },
+        playHash: row.playHash ?? undefined,
+      });
+      changed = true;
+    }
+    if (!changed) return;
+    const deployments = Array.from(byMission.values());
+    persist(get().ownerKey, deployments);
+    set({ deployments });
   },
   deploy: (missionId, agentId, playDraft, chain) => {
     const row: FieldDeployment = {

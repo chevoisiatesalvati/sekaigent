@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { COPY } from "@/lib/copy";
-import { fetchMission, MOCK_MISSIONS } from "@/lib/api";
+import { fetchMission } from "@/lib/api";
 import { useUiStore } from "../stores/uiStore";
 import { useLoadoutStore } from "../stores/loadoutStore";
 import { useFieldStore } from "../stores/fieldStore";
@@ -31,11 +31,11 @@ export function SealScreen() {
     let cancelled = false;
 
     (async () => {
-      const mission =
-        (await fetchMission(missionId)) ??
-        MOCK_MISSIONS.find((m) => m.id === missionId) ??
-        null;
-      if (!mission || cancelled) return;
+      const mission = await fetchMission(missionId);
+      if (!mission || cancelled) {
+        if (!cancelled) setError("Case not found.");
+        return;
+      }
 
       const result = await sealOnChain({ mission, agent, draft });
       if (cancelled) return;

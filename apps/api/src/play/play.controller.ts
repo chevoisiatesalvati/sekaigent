@@ -20,10 +20,16 @@ export class PlayController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const result = await this.playService.suggest(parsed.data);
-    return {
-      play: result.play,
-      source: result.source,
-    };
+    try {
+      const result = await this.playService.suggest(parsed.data);
+      return {
+        play: result.play,
+        source: result.source,
+      };
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "suggest_failed";
+      throw new HttpException({ error: message }, HttpStatus.BAD_GATEWAY);
+    }
   }
 }

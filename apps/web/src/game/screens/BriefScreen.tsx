@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import {
-  fetchMission,
-  MOCK_MISSIONS,
-  regionName,
-  type MissionListItem,
-} from "@/lib/api";
+import { fetchMission, regionName, type MissionListItem } from "@/lib/api";
 import {
   COPY,
   durationLabel,
@@ -52,21 +47,18 @@ export function BriefScreen() {
   const noiseIds = useDossierMarksStore((s) => s.noiseIds);
   const { isConnected } = useAccount();
 
-  const [mission, setMission] = useState<MissionListItem | null>(
-    () => MOCK_MISSIONS.find((m) => m.id === missionId) ?? null,
-  );
+  const [mission, setMission] = useState<MissionListItem | null>(null);
   const [docId, setDocId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!missionId) return;
-    const mock = MOCK_MISSIONS.find((m) => m.id === missionId) ?? null;
-    setMission(mock);
-    setDocId(mock?.case_file?.[0]?.id ?? null);
+    setMission(null);
+    setDocId(null);
     let cancelled = false;
     fetchMission(missionId).then((row) => {
       if (!cancelled && row) {
         setMission(row);
-        setDocId((prev) => prev ?? row.case_file?.[0]?.id ?? null);
+        setDocId(row.case_file?.[0]?.id ?? null);
       }
     });
     return () => {

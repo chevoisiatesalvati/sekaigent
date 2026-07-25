@@ -21,6 +21,8 @@ export type SuggestRouterConfig = {
   apiKey?: string;
   baseURL?: string;
   model?: string;
+  /** When false, do not fall back to offline assemble. */
+  allowOffline?: boolean;
   /** Injected for tests — when set, skips live OpenAI client. */
   complete?: (args: {
     system: string;
@@ -116,12 +118,14 @@ export async function suggestMissionPlayViaRouter(
   const model =
     config.model ?? process.env.OG_COMPUTE_MODEL ?? DEFAULT_MODEL;
 
+  const allowOffline = config.allowOffline !== false;
   const offline = (): SuggestOrdersResult => ({
     play: assembleMissionPlayFromChoices(input),
     source: "offline",
   });
 
   if (!apiKey && !config.complete) {
+    if (!allowOffline) throw new Error("OG_COMPUTE_ROUTER_API_KEY unset");
     return offline();
   }
 
@@ -147,10 +151,12 @@ export async function suggestMissionPlayViaRouter(
 
     const parsed = tryParseSuggestedPlay(text, input);
     if (!parsed) {
+      if (!allowOffline) throw new Error("router_suggest_parse_failed");
       return offline();
     }
     return { play: parsed, source: "compute" };
-  } catch {
+  } catch (err) {
+    if (!allowOffline) throw err;
     return offline();
   }
 }

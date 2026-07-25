@@ -2,8 +2,14 @@ import type { CaseDocument } from "@sekaigent/game-schemas";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
+/** Practice mocks / local desk. Off by default for live-first. */
+export const USE_MOCKS =
+  process.env.NEXT_PUBLIC_USE_MOCKS === "1" ||
+  process.env.NEXT_PUBLIC_USE_MOCKS === "true";
+
 export type MissionListItem = {
   id: string;
+  on_chain_id?: string | number | null;
   region_id: string;
   title: string;
   public_brief: string;
@@ -18,6 +24,15 @@ export type MissionListItem = {
   solution_notes?: string;
   hidden_criteria?: string;
 };
+
+/** Prefer numeric vault id for chain accept/submit and playHash. */
+export function missionChainId(mission: MissionListItem): string | null {
+  if (mission.on_chain_id != null && String(mission.on_chain_id) !== "") {
+    return String(mission.on_chain_id);
+  }
+  if (/^\d+$/.test(mission.id)) return mission.id;
+  return null;
+}
 
 export type MissionAudit = {
   missionId?: string;
@@ -39,18 +54,21 @@ export type MissionAudit = {
 export async function fetchMissions(): Promise<MissionListItem[]> {
   try {
     const res = await fetch(`${API_URL}/missions`, { cache: "no-store" });
-    if (!res.ok) return MOCK_MISSIONS;
+    if (!res.ok) return USE_MOCKS ? MOCK_MISSIONS : [];
     const rows = (await res.json()) as MissionListItem[];
-    return rows.length > 0 ? rows : MOCK_MISSIONS;
+    if (rows.length > 0) return rows;
+    return USE_MOCKS ? MOCK_MISSIONS : [];
   } catch {
-    return MOCK_MISSIONS;
+    return USE_MOCKS ? MOCK_MISSIONS : [];
   }
 }
 
 export async function fetchMission(
   id: string,
 ): Promise<MissionListItem | null> {
-  const mock = MOCK_MISSIONS.find((m) => m.id === id) ?? null;
+  const mock = USE_MOCKS
+    ? (MOCK_MISSIONS.find((m) => m.id === id) ?? null)
+    : null;
   try {
     const res = await fetch(`${API_URL}/missions/${id}`, { cache: "no-store" });
     if (!res.ok) return mock;
@@ -71,10 +89,119 @@ export async function fetchMissionAudit(
     const res = await fetch(`${API_URL}/missions/${id}/audit`, {
       cache: "no-store",
     });
-    if (!res.ok) return MOCK_AUDITS[id] ?? null;
+    if (!res.ok) return USE_MOCKS ? (MOCK_AUDITS[id] ?? null) : null;
     return (await res.json()) as MissionAudit;
   } catch {
-    return MOCK_AUDITS[id] ?? null;
+    return USE_MOCKS ? (MOCK_AUDITS[id] ?? null) : null;
+  }
+}
+
+export async function fetchOwnedAgents(address: string): Promise<
+  Array<{ tokenId: string; encryptedURI: string; metadataHash: string }>
+> {
+  try {
+    const res = await fetch(
+      `${API_URL}/agents/owned?address=${encodeURIComponent(address)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return [];
+    const body = (await res.json()) as {
+      agents?: Array<{
+        tokenId: string;
+        encryptedURI: string;
+        metadataHash: string;
+      }>;
+    };
+    return body.agents ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function sealAgentIntel(intel: unknown): Promise<{
+  rootHash: string;
+  backend?: string;
+} | null> {
+  try {
+    const res = await fetch(`${API_URL}/storage/seal-agent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ intel }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { rootHash: string; backend?: string };
+  } catch {
+    return null;
+  }
+}
+
+export async function sealPlayToStorage(play: unknown): Promise<{
+  rootHash: string;
+  backend?: string;
+} | null> {
+  try {
+    const res = await fetch(`${API_URL}/storage/seal-play`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ play }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { rootHash: string; backend?: string };
+  } catch {
+    return null;
+  }
+}
+
+export async function recordPlayStorage(input: {
+  missionId: string;
+  agentTokenId: string;
+  playHash: string;
+  storageUri: string;
+  sealedJson?: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${API_URL}/missions/${encodeURIComponent(input.missionId)}/plays`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentTokenId: input.agentTokenId,
+          playHash: input.playHash,
+          storageUri: input.storageUri,
+          sealedJson: input.sealedJson,
+        }),
+      },
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export type FieldDeploymentRow = {
+  missionId: string;
+  missionTitle: string;
+  onChainId: string | null;
+  status: string;
+  agentTokenId: string;
+  playHash: string | null;
+  playerAddress: string | null;
+};
+
+export async function fetchFieldDeployments(
+  address: string,
+): Promise<FieldDeploymentRow[]> {
+  try {
+    const res = await fetch(
+      `${API_URL}/field?address=${encodeURIComponent(address)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return [];
+    const body = (await res.json()) as { deployments?: FieldDeploymentRow[] };
+    return body.deployments ?? [];
+  } catch {
+    return [];
   }
 }
 

@@ -6,6 +6,8 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import type { Archetype } from "@/lib/portraits";
 import { AGENT_MODEL_BY_ARCHETYPE } from "./agentModels";
+import { disposeObject3D } from "./disposeObject";
+import { WebglDispose } from "./WebglDispose";
 
 type AgentShowcaseProps = {
   portraitSrc: string;
@@ -24,6 +26,9 @@ function AgentModel({ archetype }: { archetype: Archetype }) {
       obj.castShadow = true;
       obj.receiveShadow = true;
     });
+    return () => {
+      disposeObject3D(clone);
+    };
   }, [clone]);
 
   useFrame((_, delta) => {
@@ -48,10 +53,11 @@ export function AgentShowcase({
     <Canvas
       camera={{ position: [0, 1.05, 3.4], fov: 32 }}
       dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true }}
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={{ width: "100%", height: "100%" }}
       aria-label={`Showcase ${codename}`}
     >
+      <WebglDispose />
       <color attach="background" args={["#0a100e"]} />
       <ambientLight intensity={0.7} />
       <directionalLight position={[2.2, 3.5, 2]} intensity={1.3} />

@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import {
   fetchMission,
   fetchMissionAudit,
-  MOCK_AUDITS,
-  MOCK_MISSIONS,
   regionName,
   type MissionAudit,
   type MissionListItem,
@@ -25,9 +23,8 @@ export function DebriefScreen() {
 
   useEffect(() => {
     if (!missionId) return;
-    const mock = MOCK_MISSIONS.find((m) => m.id === missionId) ?? null;
-    setMission(mock);
-    setAudit(MOCK_AUDITS[missionId] ?? null);
+    setMission(null);
+    setAudit(null);
     let cancelled = false;
     Promise.all([fetchMission(missionId), fetchMissionAudit(missionId)]).then(
       ([m, a]) => {

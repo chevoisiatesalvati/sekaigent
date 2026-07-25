@@ -11,12 +11,19 @@ import {
 } from "@/lib/contracts";
 import { OG_CHAIN_ID } from "@/lib/chain";
 import { hashMissionPlayDraft } from "@/lib/playHash";
+import {
+  missionChainId,
+  recordPlayStorage,
+  sealAgentIntel,
+  sealPlayToStorage,
+  USE_MOCKS,
+  type MissionListItem,
+} from "@/lib/api";
 import type { MissionPlayDraft, SquadAgent } from "../types";
-import type { MissionListItem } from "@/lib/api";
 
 /**
  * Attempt on-chain mint when wallet has minter role.
- * Falls back quietly — hire still succeeds on the local desk.
+ * Seals private intel to 0G Storage (via API) before mint.
  */
 export function useMintAgent() {
   const { address, chainId } = useAccount();
@@ -26,9 +33,13 @@ export function useMintAgent() {
 
   async function mintIfPossible(
     agent: SquadAgent,
-  ): Promise<{ tokenId: string; txHash: string } | null> {
+  ): Promise<{ tokenId: string; txHash: string; encryptedURI: string } | null> {
     if (!address || chainId !== OG_CHAIN_ID || !publicClient) {
-      setStatus("Local desk only — switch to 0G Mainnet for chain mint.");
+      setStatus(
+        USE_MOCKS
+          ? "Local desk only — switch to 0G Mainnet for chain mint."
+          : "Connect wallet on 0G Mainnet to mint.",
+      );
       return null;
     }
     try {
@@ -45,40 +56,70 @@ export function useMintAgent() {
         args: [minterRole, address],
       })) as boolean;
       if (!hasRole) {
-        setStatus("No minter role — hired on local desk.");
+        setStatus(
+          USE_MOCKS
+            ? "No minter role — hired on local desk."
+            : "No minter role on this wallet.",
+        );
         return null;
       }
+
+      setStatus("Sealing private intel…");
+      const intel = {
+        personality: agent.personality,
+        skills: agent.skills,
+        behaviorRules: agent.behaviorRules,
+        memoryDigest: agent.memoryDigest,
+      };
+      const sealed = await sealAgentIntel(intel);
+      const encryptedURI = sealed?.rootHash
+        ? `0g://${sealed.rootHash}`
+        : USE_MOCKS
+          ? `local://${agent.id}`
+          : null;
+      if (!encryptedURI) {
+        setStatus("Storage seal failed — cannot mint without encryptedURI.");
+        return null;
+      }
+
       const metadataHash = keccak256(
         stringToHex(
           JSON.stringify({
             name: agent.name,
             codename: agent.codename,
             archetype: agent.archetype,
+            portraitId: agent.portraitId,
+            publicSummary: agent.publicSummary,
           }),
         ),
       );
       setStatus("Minting on 0G…");
+      const nextBefore = (await publicClient.readContract({
+        address: MAINNET_ADDRESSES.sekaiAgent,
+        abi: sekaiAgentAbi,
+        functionName: "nextTokenId",
+      })) as bigint;
       const txHash = await writeContractAsync({
         address: MAINNET_ADDRESSES.sekaiAgent,
         abi: sekaiAgentAbi,
         functionName: "mint",
-        args: [address, `local://${agent.id}`, metadataHash],
+        args: [address, encryptedURI, metadataHash],
       });
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
       });
-      const total = await publicClient.readContract({
-        address: MAINNET_ADDRESSES.sekaiAgent,
-        abi: sekaiAgentAbi,
-        functionName: "totalSupply",
-      });
-      setStatus(`Minted dossier #${String(total)}`);
-      return { tokenId: String(total), txHash: receipt.transactionHash };
+      const tokenId = String(nextBefore);
+      setStatus(`Minted dossier #${tokenId}`);
+      return {
+        tokenId,
+        txHash: receipt.transactionHash,
+        encryptedURI,
+      };
     } catch (err) {
       setStatus(
         err instanceof Error
           ? `Mint skipped: ${err.message.slice(0, 120)}`
-          : "Mint skipped — local desk.",
+          : "Mint skipped.",
       );
       return null;
     }
@@ -101,23 +142,51 @@ export function useSealOnChain() {
     playHash: `0x${string}`;
     acceptTxHash?: string;
     submitTxHash?: string;
+    storageUri?: string;
     localOnly: boolean;
     error?: string;
   }> {
     const submittedAt = Math.floor(Date.now() / 1000);
+    const chainMissionId = missionChainId(input.mission);
+    const tokenIdStr = input.agent.dossierNumber ?? null;
+    const missionIdForHash = chainMissionId ?? input.mission.id;
+    const agentTokenIdForHash = tokenIdStr ?? "0";
+
     const playHash = hashMissionPlayDraft({
-      missionId: input.mission.id,
-      agentTokenId: input.agent.dossierNumber ?? "0",
+      missionId: missionIdForHash,
+      agentTokenId: agentTokenIdForHash,
       draft: input.draft,
       submittedAt,
     });
 
-    const onChainId = input.mission.id.match(/^\d+$/)
-      ? BigInt(input.mission.id)
-      : null;
-    const tokenId = input.agent.dossierNumber
-      ? BigInt(input.agent.dossierNumber)
-      : null;
+    const playBody = {
+      missionId: missionIdForHash,
+      agentTokenId: agentTokenIdForHash,
+      approach: input.draft.approach,
+      steps: input.draft.steps,
+      risksAccepted: input.draft.risksAccepted,
+      resourcesUsed: input.draft.resourcesUsed,
+      contingencies: input.draft.contingencies,
+      finalOutcomeClaim: input.draft.finalOutcomeClaim,
+      playHash,
+      submittedAt,
+    };
+
+    setStatus("Sealing orders to storage…");
+    const sealed = await sealPlayToStorage(playBody);
+    const storageUri = sealed?.rootHash ?? undefined;
+    if (storageUri) {
+      await recordPlayStorage({
+        missionId: input.mission.id,
+        agentTokenId: agentTokenIdForHash,
+        playHash,
+        storageUri,
+        sealedJson: JSON.stringify(playBody),
+      });
+    }
+
+    const onChainId = chainMissionId ? BigInt(chainMissionId) : null;
+    const tokenId = tokenIdStr ? BigInt(tokenIdStr) : null;
 
     if (
       !address ||
@@ -126,8 +195,16 @@ export function useSealOnChain() {
       onChainId == null ||
       tokenId == null
     ) {
+      if (!USE_MOCKS && (onChainId == null || tokenId == null)) {
+        const error =
+          onChainId == null
+            ? "Case has no on-chain mission id yet."
+            : "Operative has no on-chain dossier number.";
+        setStatus(error);
+        return { playHash, storageUri, localOnly: true, error };
+      }
       setStatus("Orders sealed on local desk (no on-chain mission id / token).");
-      return { playHash, localOnly: true };
+      return { playHash, storageUri, localOnly: true };
     }
 
     try {
@@ -151,12 +228,18 @@ export function useSealOnChain() {
       });
       await publicClient.waitForTransactionReceipt({ hash: submitTxHash });
       setStatus("Orders on chain.");
-      return { playHash, acceptTxHash, submitTxHash, localOnly: false };
+      return {
+        playHash,
+        acceptTxHash,
+        submitTxHash,
+        storageUri,
+        localOnly: false,
+      };
     } catch (err) {
       const message =
         err instanceof Error ? err.message.slice(0, 160) : "Chain seal failed";
       setStatus(message);
-      return { playHash, localOnly: true, error: message };
+      return { playHash, storageUri, localOnly: true, error: message };
     }
   }
 
