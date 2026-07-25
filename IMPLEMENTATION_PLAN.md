@@ -178,7 +178,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 |-----|------|--------|
 | **2.1** | NestJS + Postgres models | Done |
 | **2.2** | Admin mission authoring | Done |
-| **2.3** | Chain event indexer | Pending |
+| **2.3** | Chain event indexer | Done |
 | **2.4** | Evaluator relayer | Pending |
 
 ### Phase 3 — Play + Eval
@@ -279,3 +279,8 @@ Migrations apply via PGlite locally when Docker is unavailable; health endpoint 
 
 Added admin-guarded mission authoring with criteria commitment matching Solidity abi.encodePacked.
 Commitment helper verified against cast keccak; create mission returns commitment for on-chain createMission.
+
+### 2.3 — Done
+
+Added chain event indexer service with fixture ingest for MissionCreated/Accepted/PlaySubmitted/Settled.
+Fixture test proves event rows persist in the indexed_events table.
