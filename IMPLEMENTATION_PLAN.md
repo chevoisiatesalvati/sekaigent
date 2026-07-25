@@ -186,7 +186,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 | Sub | Work | Status |
 |-----|------|--------|
 | **3.1** | 0G Storage SDK helpers | Done |
-| **3.2** | MissionPlay generator | Pending |
+| **3.2** | MissionPlay generator | Done |
 | **3.3** | Rubric evaluator | Pending |
 | **3.4** | Evaluate and settle pipeline | Pending |
 
@@ -294,3 +294,8 @@ Relayer key read from env only; unit tests cover calldata encoding.
 
 Added AES-GCM sealed JSON helpers plus MemoryStorage and OgStorageClient (0G mainnet indexer).
 Sealed round-trip tests pass; live mainnet upload requires funded DEPLOYER_PRIVATE_KEY (MCP wallet not connected yet).
+
+### 3.2 — Done
+
+Implemented MissionPlay offline generator with Zod validation and playHash (0G Compute prompts ready; MCP wallet pending).
+Golden fixture test produces schema-valid plays from brief + agent intel.
