@@ -156,8 +156,8 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 
 | Sub | Work | Status |
 |-----|------|--------|
-| **0.1** | Write root IMPLEMENTATION_PLAN.md | In progress |
-| **0.2** | Root `.gitignore` + `.env.example` | Pending |
+| **0.1** | Write root IMPLEMENTATION_PLAN.md | Done |
+| **0.2** | Root `.gitignore` + `.env.example` | Done |
 | **0.3** | `cursor_project_rules/` KB | Pending |
 | **0.4** | Monorepo workspaces scaffold | Pending |
 | **0.5** | `packages/game-schemas` Zod/TS + tests | Pending |
@@ -224,3 +224,8 @@ Tile exploration, player-created missions, ENS, marketplace UI, live agent↔eva
 
 Added root IMPLEMENTATION_PLAN.md with mechanics, architecture, 0G mainnet targets, and phased subphase checklist.
 Initialized git repository for subphase commits.
+
+### 0.2 — Done
+
+Expanded .gitignore for secrets, keys, build artifacts, and Foundry broadcast.
+Added .env.example with 0G mainnet placeholders only (no real keys).

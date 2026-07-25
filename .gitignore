@@ -1,0 +1,54 @@
+# Secrets and keys
+.env
+.env.*
+!.env.example
+**/secrets/
+*.pem
+*.key
+*.keystore
+**/keystore/
+PRIVATE_KEY*
+*mnemonic*
+*wallet*.json
+!package.json
+!tsconfig*.json
+
+# Dependencies and builds
+node_modules/
+dist/
+build/
+out/
+coverage/
+.next/
+.turbo/
+cache/
+broadcast/
+typechain-types/
+artifacts/
+forge-cache/
+lib/forge-std/
+!contracts/lib/.gitkeep
+
+# Local data
+apps/api/.data/
+*.sqlite
+*.db
+docker-data/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
