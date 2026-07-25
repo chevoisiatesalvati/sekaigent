@@ -376,3 +376,8 @@ Briefing page uses stake/purse/window chips in 0G; no wei or chain jargon.
 
 Added Deploy theater: pick operative, seal animation, local in-field persistence.
 Field desk lists active deployments; no on-chain accept/submit in this phase.
+
+### 6.5 — Done
+
+Operations HQ desk composition, Bureau season table + debrief podiums with portraits.
+Admin unlisted as Bureau ops; map pulse / deploy stamp / roster lift motions in place.

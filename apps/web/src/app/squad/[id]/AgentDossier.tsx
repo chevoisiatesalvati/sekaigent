@@ -58,13 +58,7 @@ export function AgentDossier({ agentId }: { agentId: string }) {
           label={deployed ? COPY.readinessDeployed : COPY.readinessReady}
         />
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(180px, 260px) 1fr",
-          gap: "1.25rem",
-        }}
-      >
+      <div className="dossier-layout">
         <img
           className="portrait"
           src={agentPortraitSrc(agent)}

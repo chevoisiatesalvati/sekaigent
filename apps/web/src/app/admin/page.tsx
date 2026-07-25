@@ -1,13 +1,14 @@
 import { AdminMissionForm } from "./AdminMissionForm";
 
+/** Unlisted bureau ops — not in primary player nav. */
 export default function AdminPage() {
   return (
     <main className="stack">
       <div>
-        <h1>Admin console</h1>
+        <h1>Bureau ops</h1>
         <p className="muted">
-          Create missions with hidden criteria. Criteria stay committed until
-          reveal after endsAt.
+          Author jobs with a classified briefing. Players only see the public
+          brief until debrief.
         </p>
       </div>
       <AdminMissionForm />
