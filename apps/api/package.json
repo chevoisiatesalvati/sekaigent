@@ -1,0 +1,10 @@
+{
+  "name": "@sekaigent/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"api scaffold — NestJS added in phase 2\"",
+    "build": "echo \"api scaffold — no build yet\"",
+    "lint": "echo \"ok\""
+  }
+}

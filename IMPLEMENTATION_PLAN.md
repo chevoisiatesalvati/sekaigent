@@ -159,7 +159,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 | **0.1** | Write root IMPLEMENTATION_PLAN.md | Done |
 | **0.2** | Root `.gitignore` + `.env.example` | Done |
 | **0.3** | `cursor_project_rules/` KB | Done |
-| **0.4** | Monorepo workspaces scaffold | Pending |
+| **0.4** | Monorepo workspaces scaffold | Done |
 | **0.5** | `packages/game-schemas` Zod/TS + tests | Pending |
 
 ### Phase 1 — Contracts (0G Mainnet)
@@ -234,3 +234,8 @@ Added .env.example with 0G mainnet placeholders only (no real keys).
 
 Added cursor_project_rules knowledge base (overview, mechanics, architecture, implementation-plan).
 KB alwaysApply rules align agents to mainnet MVP scope.
+
+### 0.4 — Done
+
+Scaffolded npm workspaces (apps/web, apps/api, packages/game-schemas, packages/sdk) plus contracts/docs/deployments.
+Workspace install completes cleanly with shared tsconfig.base.json.

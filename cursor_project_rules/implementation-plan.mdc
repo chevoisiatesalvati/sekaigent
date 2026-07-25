@@ -25,7 +25,10 @@ Added .env.example with 0G mainnet placeholders.
 Added cursor_project_rules knowledge base (overview, mechanics, architecture, implementation-plan).
 KB alwaysApply rules align agents to mainnet MVP scope.
 
-### 0.4 — Pending
+### 0.4 — Done
+
+Scaffolded npm workspaces (apps/web, apps/api, packages/game-schemas, packages/sdk) plus contracts/docs/deployments.
+Workspace install completes cleanly with shared tsconfig.base.json.
 
 ### 0.5 — Pending
 

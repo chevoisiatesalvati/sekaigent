@@ -1,0 +1,10 @@
+{
+  "name": "@sekaigent/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"web scaffold — Next.js added in phase 4\"",
+    "build": "echo \"web scaffold — no build yet\"",
+    "lint": "echo \"ok\""
+  }
+}
