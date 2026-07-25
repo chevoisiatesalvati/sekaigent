@@ -23,3 +23,12 @@ export {
   evaluationSeed,
   type PlayGeneratorInput,
 } from "./play.js";
+
+export {
+  EVAL_PROMPT_VERSION,
+  EVAL_MODEL_ID,
+  evaluateMissionPlayOffline,
+  hashEvaluation,
+  buildEvalSystemPrompt,
+  type EvaluateInput,
+} from "./evaluate.js";

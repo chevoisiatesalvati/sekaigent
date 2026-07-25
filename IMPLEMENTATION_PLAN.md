@@ -187,7 +187,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 |-----|------|--------|
 | **3.1** | 0G Storage SDK helpers | Done |
 | **3.2** | MissionPlay generator | Done |
-| **3.3** | Rubric evaluator | Pending |
+| **3.3** | Rubric evaluator | Done |
 | **3.4** | Evaluate and settle pipeline | Pending |
 
 ### Phase 4 — Frontend
@@ -299,3 +299,8 @@ Sealed round-trip tests pass; live mainnet upload requires funded DEPLOYER_PRIVA
 
 Implemented MissionPlay offline generator with Zod validation and playHash (0G Compute prompts ready; MCP wallet pending).
 Golden fixture test produces schema-valid plays from brief + agent intel.
+
+### 3.3 — Done
+
+Implemented deterministic rubric evaluator with promptVersion rubric-v1 and bribe/stealth penalties.
+Fixture tests keep scores within rubric bounds.
