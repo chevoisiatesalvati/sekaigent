@@ -58,8 +58,8 @@ Copy [`.env.example`](.env.example) → `.env`. **Never commit `.env`.**
 
 | Variable | What it is | Where to get it |
 |----------|------------|-----------------|
-| `SEKAI_AGENT_ADDRESS` | Address of `SekaiAgent` | Live: `0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0` — also `deployments/mainnet/addresses.json`. Verify on [chainscan](https://chainscan.0g.ai). |
-| `MISSION_VAULT_ADDRESS` | Address of `MissionVault` | Live: `0xECEb0d92Ce37Fa48922991aFa70460D9c62666df`. Indexer/settle/admin txs use this. |
+| `SEKAI_AGENT_ADDRESS` | Address of `SekaiAgent` | Live: `0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974` — also `deployments/mainnet/addresses.json`. Verify on [chainscan](https://chainscan.0g.ai). |
+| `MISSION_VAULT_ADDRESS` | Address of `MissionVault` | Live: `0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b`. Indexer/settle/admin txs use this. |
 
 ### Private keys (you create — never share or commit)
 
@@ -178,12 +178,12 @@ scripts/
 
 | Contract | Address |
 |----------|---------|
-| SekaiAgent | [`0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0`](https://chainscan.0g.ai/address/0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0) |
-| MissionVault | [`0xECEb0d92Ce37Fa48922991aFa70460D9c62666df`](https://chainscan.0g.ai/address/0xECEb0d92Ce37Fa48922991aFa70460D9c62666df) |
+| SekaiAgent | [`0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974`](https://chainscan.0g.ai/address/0x4bb6436cf22befdd7cC65000BeC62e4CB21A2974) |
+| MissionVault | [`0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b`](https://chainscan.0g.ai/address/0x27137e33D0AF7cE24ACc057F2A9F09aEa5bd478b) |
 
-First agent: tokenId `1` — [`deployments/mainnet/first-agent.json`](deployments/mainnet/first-agent.json)  
-First mission audit: [`deployments/mainnet/first-mission-audit.json`](deployments/mainnet/first-mission-audit.json)  
-Ops runbook: [`docs/mainnet-ops.md`](docs/mainnet-ops.md)
+Admin / relayer: `0x8dA01238985992E63Bd09EBF05963f10683c3378`  
+Ops runbook: [`docs/mainnet-ops.md`](docs/mainnet-ops.md)  
+(`first-*` artifacts document the superseded 2026-07-25 deploy.)
 
 ## Safety
 
