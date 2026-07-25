@@ -52,4 +52,4 @@ yarn-error.log*
 # Foundry
 contracts/cache/
 contracts/out/
-contracts/broadcast/
+contracts/broadcast/*
