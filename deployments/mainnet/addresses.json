@@ -4,14 +4,16 @@
   "rpc": "https://evmrpc.0g.ai",
   "explorer": "https://chainscan.0g.ai",
   "contracts": {
-    "SekaiAgent": null,
-    "MissionVault": null
+    "SekaiAgent": "0x0Ce626095BF6B1B29Bd4B374C271EB80eDB0F9e0",
+    "MissionVault": "0xECEb0d92Ce37Fa48922991aFa70460D9c62666df"
   },
   "registries": {
     "ERC8004Identity": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     "ERC8004Reputation": "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
     "StorageFlow": "0x62D4144dB0F0a6fBBaeb6296c785C71B3D57C526"
   },
-  "deployedAt": null,
-  "notes": "Addresses filled after Phase 5.1 broadcast. Never store private keys here."
+  "deployedAt": "2026-07-25",
+  "admin": "0x517A4221825c816dbe8685aD2eA802E5e1467Bf8",
+  "relayer": "0x517A4221825c816dbe8685aD2eA802E5e1467Bf8",
+  "notes": "Never store private keys here."
 }

@@ -10,7 +10,7 @@
 - Evaluation = commit–reveal criteria + structured MissionPlay + shared rubric grader
 - Network = **0G Mainnet only** (no Galileo testnet path)
 - Process = phases/subphases; **one git commit at the end of every subphase**
-- Keep this file in sync with [`cursor_project_rules/implementation-plan.mdc`](cursor_project_rules/implementation-plan.mdc)
+- Keep this file in sync with [`.cursor/rules/implementation-plan.mdc`](.cursor/rules/implementation-plan.mdc)
 
 ---
 
@@ -128,7 +128,7 @@ sekaigent/
   IMPLEMENTATION_PLAN.md
   .gitignore
   .env.example
-  cursor_project_rules/
+  .cursor/rules/
   apps/web/
   apps/api/
   packages/game-schemas/
@@ -158,7 +158,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 |-----|------|--------|
 | **0.1** | Write root IMPLEMENTATION_PLAN.md | Done |
 | **0.2** | Root `.gitignore` + `.env.example` | Done |
-| **0.3** | `cursor_project_rules/` KB | Done |
+| **0.3** | `.cursor/rules/` KB | Done |
 | **0.4** | Monorepo workspaces scaffold | Done |
 | **0.5** | `packages/game-schemas` Zod/TS + tests | Done |
 
@@ -204,7 +204,7 @@ One commit per subphase after acceptance checks pass. Never commit secrets.
 
 | Sub | Work | Status |
 |-----|------|--------|
-| **5.1** | Deploy contracts to mainnet | Pending |
+| **5.1** | Deploy contracts to mainnet | Done |
 | **5.2** | Mint first mainnet agent | Pending |
 | **5.3** | First mission accept and play | Pending |
 | **5.4** | Settle and publish audit | Pending |
@@ -232,8 +232,8 @@ Added .env.example with 0G mainnet placeholders only (no real keys).
 
 ### 0.3 — Done
 
-Added cursor_project_rules knowledge base (overview, mechanics, architecture, implementation-plan).
-KB alwaysApply rules align agents to mainnet MVP scope.
+Added project rules knowledge base under `.cursor/rules/` (overview, mechanics, architecture, implementation-plan).
+AlwaysApply rules align agents to mainnet MVP scope.
 
 ### 0.4 — Done
 
@@ -329,3 +329,8 @@ Mint hooks ready for Phase 5 contract wiring.
 
 Added admin console form to create missions via API with bearer token and hidden criteria.
 Region select covers all map lobby pins.
+
+### 5.1 — Done
+
+Deployed SekaiAgent and MissionVault to 0G Mainnet; addresses recorded in deployments/mainnet.
+Bytecode verified on-chain via cast code; explorer links in status.json.

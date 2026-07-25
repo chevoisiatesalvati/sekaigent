@@ -22,8 +22,8 @@ Added .env.example with 0G mainnet placeholders.
 
 ### 0.3 — Done
 
-Added cursor_project_rules knowledge base (overview, mechanics, architecture, implementation-plan).
-KB alwaysApply rules align agents to mainnet MVP scope.
+Added project rules knowledge base under `.cursor/rules/` (overview, mechanics, architecture, implementation-plan).
+AlwaysApply rules align agents to mainnet MVP scope.
 
 ### 0.4 — Done
 
@@ -137,4 +137,9 @@ Region select covers all map lobby pins.
 
 ## Phase 5 — Mainnet E2E
 
-### 5.1–5.5 — Pending
+### 5.1 — Done
+
+Deployed SekaiAgent and MissionVault to 0G Mainnet; addresses recorded in deployments/mainnet.
+Bytecode verified on-chain via cast code; explorer links in status.json.
+
+### 5.2–5.5 — Pending
