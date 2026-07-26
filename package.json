@@ -8,6 +8,9 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:packages": "npm run build --workspace=@sekaigent/game-schemas && npm run build --workspace=@sekaigent/sdk",
+    "build:web": "npm run build:packages && npm run build --workspace=@sekaigent/web",
+    "build:api": "npm run build:packages && npm run build --workspace=@sekaigent/api",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "docker:up": "docker compose up -d",
