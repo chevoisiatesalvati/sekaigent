@@ -28,7 +28,7 @@ export const config = {
     process.env.DATABASE_URL ??
     "postgresql://sekaigent:sekaigent@localhost:5432/sekaigent",
   redisUrl: process.env.REDIS_URL ?? "redis://localhost:6379",
-  adminJwtSecret: process.env.ADMIN_JWT_SECRET ?? "change-me",
+  /** MissionVault ADMIN_ROLE holder (deployer). Bearer must match for admin API. */
   adminAddress: (process.env.ADMIN_ADDRESS ?? "").toLowerCase(),
   ogRpcUrl: process.env.OG_RPC_URL ?? "https://evmrpc.0g.ai",
   ogChainId: Number(process.env.OG_CHAIN_ID ?? 16661),

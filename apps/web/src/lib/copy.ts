@@ -71,6 +71,11 @@ export const COPY = {
   fieldPlanSealed: "Orders sealed until debrief.",
   deployCta: "Brief your operative",
   sealDeploy: "Seal orders",
+  sealDeploying: "Deploying operative…",
+  sealDeployed: "Operative in the field",
+  sealRedirectBrief: "Opening case file…",
+  deployedOnCase: "Already in the field",
+  deployAnother: "Send another operative",
   inTheField: "In the field",
   dossierMarkHelp:
     "Judge each page against the objective: Signal = use this lead. Noise = ignore it. Mark at least one Signal before briefing.",

@@ -527,3 +527,20 @@ Local desk mint/seal soft paths only when `NEXT_PUBLIC_USE_MOCKS=1`.
 
 `SEED_DEMO` / mock gates documented in `.env.example` + `docs/mainnet-ops.md`.
 Removed debug memory ingest; Phase 11 logged complete.
+
+## Phase 12 — Deploy feedback + multi-agent case desk
+
+### 12.1 — Done
+
+Field store keys deployments by mission+agent; Brief shows already-deployed operatives
+while still allowing another free agent to brief and seal on the same open case.
+
+### 12.2 — Done
+
+Seal screen uses orbit spinner + agent portrait during accept/submit; success state
+redirects to case Brief (not Field) so the new deployment is visible immediately.
+
+### 12.3 — Done
+
+Bureau rail and admin forms gated on MissionVault ADMIN_ROLE (connected deployer wallet).
+Admin API Bearer is the wallet address matching ADMIN_ADDRESS; HMAC token field removed.

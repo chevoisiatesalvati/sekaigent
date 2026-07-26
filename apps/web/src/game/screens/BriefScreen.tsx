@@ -42,7 +42,7 @@ export function BriefScreen() {
   const selectedAgentId = useUiStore((s) => s.selectedAgentId);
   const selectAgent = useUiStore((s) => s.selectAgent);
   const agents = useSquadStore((s) => s.agents);
-  const getForMission = useFieldStore((s) => s.getForMission);
+  const deployments = useFieldStore((s) => s.deployments);
   const getActiveForAgent = useFieldStore((s) => s.getActiveForAgent);
   const beginLoadout = useLoadoutStore((s) => s.begin);
   const setMark = useDossierMarksStore((s) => s.setMark);
@@ -88,10 +88,17 @@ export function BriefScreen() {
 
   const docs: CaseDocument[] = mission.case_file ?? [];
   const activeDoc = docs.find((d) => d.id === docId) ?? docs[0];
-  const deployment = getForMission(mission.id);
+  const caseDeployments = deployments.filter(
+    (d) =>
+      d.missionId === mission.id &&
+      (d.status === "in_field" || d.status === "debriefed"),
+  );
+  const deployedAgentIds = new Set(caseDeployments.map((d) => d.agentId));
   const readyAgents = agents.filter((a) => !getActiveForAgent(a.id));
   const selected =
-    agents.find((a) => a.id === selectedAgentId) ?? readyAgents[0] ?? null;
+    agents.find((a) => a.id === selectedAgentId && !deployedAgentIds.has(a.id)) ??
+    readyAgents[0] ??
+    null;
   const marks = marksByMission[mission.id] ?? {};
   const signals = Object.entries(marks)
     .filter(([, m]) => m === "signal")
@@ -105,6 +112,7 @@ export function BriefScreen() {
   const canStartOrders = signals.length >= 1 && signals.length <= 4;
   const liveChainId = missionChainId(mission);
   const canSealOnChain = liveChainId != null;
+  const caseOpen = mission.status === "open";
 
   function applyMark(mark: PageMark) {
     if (!activeDoc) return;
@@ -240,13 +248,49 @@ export function BriefScreen() {
         </p>
       </div>
 
-      <div className="panel">
-        <h3 className="panel-title">Send into the field</h3>
-        {deployment?.status === "in_field" ? (
-          <p className="empty-note">
-            Already deployed on this case. Check Field.
+      {caseDeployments.length > 0 && (
+        <div className="panel" style={{ marginBottom: "1rem" }}>
+          <h3 className="panel-title">{COPY.deployedOnCase}</h3>
+          <p className="panel-sub" style={{ marginBottom: "0.65rem" }}>
+            Operatives with sealed orders on this case. Each pays mission tax
+            once; you can still send someone else.
           </p>
-        ) : mission.status !== "open" ? (
+          <ul className="deployed-roster">
+            {caseDeployments.map((d) => {
+              const agent = agents.find((a) => a.id === d.agentId);
+              return (
+                <li key={`${d.missionId}-${d.agentId}`} className="deployed-card">
+                  {agent ? (
+                    <img
+                      src={agentPortraitSrc(agent)}
+                      alt=""
+                      width={48}
+                      height={48}
+                    />
+                  ) : (
+                    <div className="deployed-card-fallback" aria-hidden />
+                  )}
+                  <div>
+                    <strong>{agent?.codename ?? "Operative"}</strong>
+                    <div className="empty-note">
+                      {agent?.archetype ?? "Unknown"}
+                      {d.playHash ? " · orders sealed" : ""}
+                      {d.status === "debriefed" ? " · returned" : ""}
+                    </div>
+                  </div>
+                  <span className="chip open">{COPY.readinessDeployed}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      <div className="panel">
+        <h3 className="panel-title">
+          {caseDeployments.length > 0 ? COPY.deployAnother : "Send into the field"}
+        </h3>
+        {!caseOpen ? (
           mission.status === "settled" ? (
             <button
               type="button"
@@ -285,7 +329,8 @@ export function BriefScreen() {
             </div>
             {readyAgents.length === 0 && (
               <p className="empty-note">
-                No free operatives — wait for a return or hire another.
+                No free operatives — every agent is already in the field. Hire
+                another to send a second plan on this case.
               </p>
             )}
             {!canSealOnChain && (

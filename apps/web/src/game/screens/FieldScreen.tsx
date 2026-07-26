@@ -57,7 +57,7 @@ export function FieldScreen() {
             const agent = agents.find((a) => a.id === d.agentId);
             const mission = titleFor(d.missionId);
             return (
-              <li key={d.missionId}>
+              <li key={`${d.missionId}-${d.agentId}`}>
                 <div
                   style={{
                     display: "flex",
@@ -112,7 +112,7 @@ export function FieldScreen() {
               const agent = agents.find((a) => a.id === d.agentId);
               const mission = titleFor(d.missionId);
               return (
-                <li key={`${d.missionId}-past`}>
+                <li key={`${d.missionId}-${d.agentId}-past`}>
                   <span>
                     {agent?.codename ?? "Operative"} ·{" "}
                     {mission?.title ?? d.missionId}

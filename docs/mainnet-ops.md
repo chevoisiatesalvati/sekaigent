@@ -113,7 +113,7 @@ If anything looks wrong:
 
 Happy path:
 
-1. Bureau Ops → `POST /missions` (admin JWT) → Nest `createMission` on vault → indexer sets `on_chain_id`.
+1. Bureau Ops (admin wallet connected) → `POST /missions` (Bearer admin address) → Nest `createMission` on vault → indexer sets `on_chain_id`.
 2. Recruit → `POST /storage/seal-agent` → mint with `0g://` URI.
 3. Orders → Router suggest → seal play → accept+submit → Field from `/field?address=`.
 4. After deadline → `POST /missions/:id/reveal` → settle job grades (Router) → Debrief `/missions/:id/audit`.

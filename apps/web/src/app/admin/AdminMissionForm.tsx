@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import type { CaseDocument, CaseDocumentKind } from "@sekaigent/game-schemas";
 import { createMissionAdmin, REGIONS } from "@/lib/api";
 import { ogAmountToWei } from "@/lib/contracts";
+import { useIsVaultAdmin } from "@/game/hooks/useIsVaultAdmin";
 
 const KINDS: CaseDocumentKind[] = [
   "clipping",
@@ -28,6 +30,8 @@ type AdminMissionFormProps = {
 };
 
 export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
+  const { address } = useAccount();
+  const { isAdmin, isLoading } = useIsVaultAdmin();
   const [title, setTitle] = useState("Harbor Manifest");
   const [regionId, setRegionId] = useState("harbor");
   const [publicBrief, setPublicBrief] = useState(
@@ -43,7 +47,6 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
   const [duration, setDuration] = useState<"daily" | "weekly" | "monthly">(
     "daily",
   );
-  const [token, setToken] = useState("");
   const [docs, setDocs] = useState<CaseDocument[]>([emptyDoc()]);
   const [result, setResult] = useState("");
 
@@ -55,6 +58,10 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!address || !isAdmin) {
+      setResult("Connect the MissionVault admin wallet on 0G Mainnet.");
+      return;
+    }
     const startsAt = new Date().toISOString();
     const endsAt = new Date(
       Date.now() +
@@ -63,7 +70,7 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
     ).toISOString();
     try {
       const entryFeeWei = ogAmountToWei(taxOg).toString();
-      const body = await createMissionAdmin(token, {
+      const body = await createMissionAdmin(address, {
         regionId,
         title,
         publicBrief,
@@ -84,17 +91,21 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
     }
   }
 
+  if (isLoading) {
+    return <p className="empty-note">Checking admin role…</p>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <p className="empty-note">
+        Bureau Ops requires the MissionVault admin wallet (deployer) on 0G
+        Mainnet.
+      </p>
+    );
+  }
+
   return (
     <form onSubmit={onSubmit}>
-      <div className="field">
-        <label htmlFor="admin-token">Admin token</label>
-        <input
-          id="admin-token"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="HMAC admin bearer token"
-        />
-      </div>
       <div className="field">
         <label htmlFor="admin-title">Title</label>
         <input

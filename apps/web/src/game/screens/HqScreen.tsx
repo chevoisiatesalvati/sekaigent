@@ -9,14 +9,15 @@ import {
 } from "@/lib/api";
 import { statusLabel } from "@/lib/copy";
 import { formatOgFromWei } from "@/lib/format";
+import { useIsVaultAdmin } from "@/game/hooks/useIsVaultAdmin";
 
 /**
  * Command = Bureau Ops: create cases on-chain (via API + ADMIN_PRIVATE_KEY)
- * and reveal criteria after the deadline.
+ * and reveal criteria after the deadline. Visible only to MissionVault admin.
  */
 export function HqScreen() {
+  const { isAdmin, isLoading, address } = useIsVaultAdmin();
   const [missions, setMissions] = useState<MissionListItem[]>([]);
-  const [token, setToken] = useState("");
   const [revealMsg, setRevealMsg] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -25,18 +26,18 @@ export function HqScreen() {
   }, []);
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    if (isAdmin) reload();
+  }, [isAdmin, reload]);
 
   async function onReveal(mission: MissionListItem) {
-    if (!token.trim()) {
-      setRevealMsg("Paste the admin bearer token first.");
+    if (!address || !isAdmin) {
+      setRevealMsg("Connect the MissionVault admin wallet first.");
       return;
     }
     setBusyId(mission.id);
     setRevealMsg(null);
     try {
-      const body = await revealMissionAdmin(token.trim(), mission.id);
+      const body = await revealMissionAdmin(address, mission.id);
       setRevealMsg(JSON.stringify(body, null, 2));
       reload();
     } catch (err) {
@@ -52,6 +53,29 @@ export function HqScreen() {
       (m.status === "open" || m.status === "evaluating") &&
       new Date(m.ends_at).getTime() <= Date.now(),
   );
+
+  if (isLoading) {
+    return (
+      <div className="screen-scroll">
+        <p className="empty-note">Checking admin role…</p>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="screen-scroll">
+        <p className="panel-sub" style={{ marginBottom: "0.35rem" }}>
+          Bureau Ops
+        </p>
+        <h2 className="panel-title">Restricted</h2>
+        <p className="panel-sub" style={{ maxWidth: "36rem" }}>
+          Connect the MissionVault admin wallet (deployer) on 0G Mainnet to
+          author and reveal cases.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="screen-scroll">
@@ -77,18 +101,9 @@ export function HqScreen() {
       <div className="panel" style={{ marginBottom: "1.25rem" }}>
         <h3 className="panel-title">Reveal after deadline</h3>
         <p className="panel-sub" style={{ marginBottom: "0.75rem" }}>
-          Same admin token as create. Only missions past their deadline with an
-          on-chain id appear here.
+          Uses your connected admin wallet. Only missions past their deadline
+          with an on-chain id appear here.
         </p>
-        <div className="field">
-          <label htmlFor="reveal-token">Admin token</label>
-          <input
-            id="reveal-token"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="HMAC admin bearer token"
-          />
-        </div>
         {revealable.length === 0 ? (
           <p className="empty-note">No cases ready to reveal.</p>
         ) : (

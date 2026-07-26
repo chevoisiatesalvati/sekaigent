@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { WalletButton } from "@/components/WalletButton";
 import { COPY } from "@/lib/copy";
 import { fetchFieldDeployments, fetchOwnedAgents } from "@/lib/api";
+import { useIsVaultAdmin } from "./hooks/useIsVaultAdmin";
 import { useUiStore } from "./stores/uiStore";
 import { ownerStorageKey, useSquadStore } from "./stores/squadStore";
 import { useFieldStore } from "./stores/fieldStore";
@@ -21,12 +22,13 @@ import { SealScreen } from "./screens/SealScreen";
 import { FieldScreen } from "./screens/FieldScreen";
 import { DebriefScreen } from "./screens/DebriefScreen";
 
-const RAIL: Array<{ id: GameScreen; label: string; glyph: string }> = [
+const RAIL_BASE: Array<{ id: GameScreen; label: string; glyph: string }> = [
   { id: "squad", label: "Squad", glyph: "◆" },
   { id: "map", label: "Cases", glyph: "◎" },
   { id: "field", label: "Field", glyph: "▣" },
-  { id: "hq", label: "Bureau", glyph: "◈" },
 ];
+
+const BUREAU_RAIL = { id: "hq" as const, label: "Bureau", glyph: "◈" };
 
 const screenMotion = {
   initial: { opacity: 0, x: 18 },
@@ -64,6 +66,7 @@ function ScreenRouter({ screen }: { screen: GameScreen }) {
 
 export function GameShell() {
   const { address } = useAccount();
+  const { isAdmin, isLoading: adminLoading } = useIsVaultAdmin();
   const screen = useUiStore((s) => s.screen);
   const setScreen = useUiStore((s) => s.setScreen);
   const hydrateSquad = useSquadStore((s) => s.hydrate);
@@ -74,6 +77,7 @@ export function GameShell() {
   const mergeChainDeployments = useFieldStore((s) => s.mergeChainDeployments);
   const deployments = useFieldStore((s) => s.deployments);
   const didRoute = useRef(false);
+  const rail = isAdmin ? [...RAIL_BASE, BUREAU_RAIL] : RAIL_BASE;
 
   useEffect(() => {
     const key = ownerStorageKey(address);
@@ -115,6 +119,13 @@ export function GameShell() {
     setScreen(active ? "field" : "map");
   }, [hydratedSquad, agents.length, deployments, setScreen]);
 
+  useEffect(() => {
+    if (adminLoading) return;
+    if (screen === "hq" && !isAdmin) {
+      setScreen(agents.length === 0 ? "squad" : "map");
+    }
+  }, [adminLoading, isAdmin, screen, agents.length, setScreen]);
+
   return (
     <div className="game-root">
       <header className="game-chrome">
@@ -126,7 +137,7 @@ export function GameShell() {
       </header>
       <div className="game-body">
         <nav className="game-rail" aria-label="Operations">
-          {RAIL.map((item) => {
+          {rail.map((item) => {
             const active =
               screen === item.id ||
               (item.id === "squad" &&

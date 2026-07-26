@@ -313,15 +313,16 @@ export type CreateMissionPayload = {
   salt: string;
 };
 
+/** Admin API auth: Bearer = connected wallet (must hold MissionVault ADMIN_ROLE / ADMIN_ADDRESS). */
 export async function createMissionAdmin(
-  token: string,
+  adminAddress: string,
   payload: CreateMissionPayload,
 ): Promise<unknown> {
   const res = await fetch(`${API_URL}/missions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${adminAddress}`,
     },
     body: JSON.stringify(payload),
   });
@@ -329,7 +330,7 @@ export async function createMissionAdmin(
 }
 
 export async function revealMissionAdmin(
-  token: string,
+  adminAddress: string,
   missionId: string,
 ): Promise<unknown> {
   const res = await fetch(
@@ -337,7 +338,7 @@ export async function revealMissionAdmin(
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${adminAddress}`,
       },
     },
   );

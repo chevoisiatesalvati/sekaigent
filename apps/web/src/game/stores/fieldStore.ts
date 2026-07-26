@@ -3,17 +3,29 @@
 import { create } from "zustand";
 import type { FieldDeployment, MissionPlayDraft } from "../types";
 
-const STORAGE_PREFIX = "sekaigent.field.v2:";
+const STORAGE_PREFIX = "sekaigent.field.v3:";
 
 function storageKey(ownerKey: string): string {
   return `${STORAGE_PREFIX}${ownerKey.toLowerCase()}`;
+}
+
+function deploymentKey(missionId: string, agentId: string): string {
+  return `${missionId}::${agentId}`;
 }
 
 function loadFromStorage(ownerKey: string): FieldDeployment[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(storageKey(ownerKey));
-    if (!raw) return [];
+    if (!raw) {
+      // Migrate v2 (one row per mission) if present
+      const legacy = localStorage.getItem(
+        `sekaigent.field.v2:${ownerKey.toLowerCase()}`,
+      );
+      if (!legacy) return [];
+      const parsed = JSON.parse(legacy) as FieldDeployment[];
+      return Array.isArray(parsed) ? parsed : [];
+    }
     const parsed = JSON.parse(raw) as FieldDeployment[];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -53,6 +65,7 @@ type FieldState = {
   ) => FieldDeployment;
   markDebriefed: (missionId: string) => void;
   getForMission: (missionId: string) => FieldDeployment | undefined;
+  getDeploymentsForMission: (missionId: string) => FieldDeployment[];
   getActiveForAgent: (agentId: string) => FieldDeployment | undefined;
 };
 
@@ -70,20 +83,23 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   mergeChainDeployments: (rows, resolveAgentId) => {
     if (rows.length === 0) return;
     const current = get().deployments;
-    const byMission = new Map(current.map((d) => [d.missionId, d]));
+    const byKey = new Map(
+      current.map((d) => [deploymentKey(d.missionId, d.agentId), d]),
+    );
     let changed = false;
     for (const row of rows) {
       const agentId =
         resolveAgentId(row.agentTokenId) ?? `chain-agent-${row.agentTokenId}`;
+      const key = deploymentKey(row.missionId, agentId);
       const status =
         row.status === "settled" ? ("debriefed" as const) : ("in_field" as const);
-      const existing = byMission.get(row.missionId);
+      const existing = byKey.get(key);
       if (existing) {
         if (
           existing.playHash !== (row.playHash ?? existing.playHash) ||
           existing.status !== status
         ) {
-          byMission.set(row.missionId, {
+          byKey.set(key, {
             ...existing,
             agentId,
             playHash: row.playHash ?? existing.playHash,
@@ -93,7 +109,7 @@ export const useFieldStore = create<FieldState>((set, get) => ({
         }
         continue;
       }
-      byMission.set(row.missionId, {
+      byKey.set(key, {
         missionId: row.missionId,
         agentId,
         status,
@@ -111,7 +127,7 @@ export const useFieldStore = create<FieldState>((set, get) => ({
       changed = true;
     }
     if (!changed) return;
-    const deployments = Array.from(byMission.values());
+    const deployments = Array.from(byKey.values());
     persist(get().ownerKey, deployments);
     set({ deployments });
   },
@@ -127,9 +143,12 @@ export const useFieldStore = create<FieldState>((set, get) => ({
       submitTxHash: chain?.submitTxHash,
       chainError: chain?.chainError,
     };
+    const key = deploymentKey(missionId, agentId);
     const deployments = [
       row,
-      ...get().deployments.filter((d) => d.missionId !== missionId),
+      ...get().deployments.filter(
+        (d) => deploymentKey(d.missionId, d.agentId) !== key,
+      ),
     ];
     persist(get().ownerKey, deployments);
     set({ deployments });
@@ -144,6 +163,8 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   },
   getForMission: (missionId) =>
     get().deployments.find((d) => d.missionId === missionId),
+  getDeploymentsForMission: (missionId) =>
+    get().deployments.filter((d) => d.missionId === missionId),
   getActiveForAgent: (agentId) =>
     get().deployments.find(
       (d) => d.agentId === agentId && d.status === "in_field",

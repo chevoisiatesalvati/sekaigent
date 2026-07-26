@@ -4,12 +4,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { config } from "../config.js";
 
 /**
- * MVP admin auth: Bearer token = HMAC-SHA256(adminAddress, ADMIN_JWT_SECRET)
- * or raw header x-admin-address matching ADMIN_ADDRESS when secret token matches.
+ * Admin auth: Bearer token must be the configured ADMIN_ADDRESS
+ * (MissionVault ADMIN_ROLE holder / deployer). UI gates Bureau the same way
+ * via on-chain hasRole; Nest only accepts that address.
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -18,26 +18,29 @@ export class AdminGuard implements CanActivate {
       headers: Record<string, string | undefined>;
     }>();
     const auth = req.headers.authorization ?? "";
-    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-    if (!token || !config.adminAddress) {
+    const presented = (
+      auth.startsWith("Bearer ") ? auth.slice(7) : auth
+    )
+      .trim()
+      .toLowerCase();
+
+    if (!presented || !config.adminAddress) {
       throw new UnauthorizedException("admin auth required");
     }
 
-    const expected = createHmac("sha256", config.adminJwtSecret)
-      .update(config.adminAddress)
-      .digest("hex");
-
-    const a = Buffer.from(token);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) {
-      throw new UnauthorizedException("invalid admin token");
+    if (!isAddressEqual(presented, config.adminAddress)) {
+      throw new UnauthorizedException("admin wallet required");
     }
     return true;
   }
 }
 
-export function mintAdminToken(adminAddress: string, secret: string): string {
-  return createHmac("sha256", secret)
-    .update(adminAddress.toLowerCase())
-    .digest("hex");
+/** Normalize and compare 0x addresses (lowercase hex). */
+export function isAddressEqual(a: string, b: string): boolean {
+  const left = a.trim().toLowerCase();
+  const right = b.trim().toLowerCase();
+  if (!/^0x[0-9a-f]{40}$/.test(left) || !/^0x[0-9a-f]{40}$/.test(right)) {
+    return false;
+  }
+  return left === right;
 }

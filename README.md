@@ -93,17 +93,11 @@ These are read by `contracts/script/Deploy.s.sol` via `vm.envOr`.
 | `DATABASE_URL` | Postgres connection string | Local: `postgresql://sekaigent:sekaigent@localhost:5432/sekaigent` matches `docker-compose.yml`. API falls back to PGlite when Docker/Postgres is unavailable. |
 | `REDIS_URL` | Redis URL for job queues | Local: `redis://localhost:6379` from compose, or omit until workers need it. |
 | `API_PORT` | HTTP port for Nest API | Choose freely; default `3001`. |
-| `ADMIN_JWT_SECRET` | Secret used to HMAC-mint admin API bearer tokens | Long random string you invent, e.g. `openssl rand -hex 32`. Not a blockchain key. |
-| `ADMIN_ADDRESS` | (API) lowercase admin wallet used with the HMAC token | Same admin address as on-chain. Required for `AdminGuard`. |
+| `ADMIN_ADDRESS` | MissionVault `ADMIN_ROLE` holder (deployer) | Same address granted at deploy. Required for `AdminGuard`; Bearer = this wallet. |
 | `AGENT_SEAL_PASSWORD` | AES-GCM password for sealed agent intel | Shared ops secret; default in `.env.example` is for local only. |
 | `PLAY_SEAL_PASSWORD` | AES-GCM password for sealed MissionPlays | Same — change for production. |
 
-Admin API token (for `/missions` POST and reveal):
-
-```bash
-# token = HMAC-SHA256(adminAddressLowercase, ADMIN_JWT_SECRET) as hex
-node -e "const {createHmac}=require('crypto'); console.log(createHmac('sha256', process.env.ADMIN_JWT_SECRET).update(process.env.ADMIN_ADDRESS.toLowerCase()).digest('hex'))"
-```
+Admin API (`POST /missions`, reveal): connect the `ADMIN_ADDRESS` wallet in the web app. Bureau is hidden unless that wallet holds MissionVault `ADMIN_ROLE` on 0G Mainnet. Requests send `Authorization: Bearer <wallet>`.
 
 ### Indexer + settle job
 
@@ -152,7 +146,7 @@ See [`docs/0g-compute-mcp.md`](docs/0g-compute-mcp.md) and [`docs/mainnet-ops.md
 
 ## Live player loop (Phase 11)
 
-1. **Bureau Ops** → `POST /missions` (admin JWT) → Nest broadcasts `createMission` → indexer sets `on_chain_id`
+1. **Bureau Ops** (admin wallet) → `POST /missions` → Nest broadcasts `createMission` → indexer sets `on_chain_id`
 2. **Recruit** → `POST /storage/seal-agent` → mint with `0g://` URI (minter role)
 3. **Orders** → Router suggest → seal play → `acceptMission` + `submitPlay` → Field via `/field?address=`
 4. **After deadline** → `POST /missions/:id/reveal` → settle job grades + settles → Debrief `/missions/:id/audit`
