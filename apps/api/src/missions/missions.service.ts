@@ -300,13 +300,20 @@ export class MissionsService {
         onChainId: mission.on_chain_id ?? undefined,
         revealedCriteria: mission?.hidden_criteria ?? undefined,
         solutionNotes: mission?.solution_notes ?? undefined,
-        rankings: evals.map((row, index) => ({
-          rank: index + 1,
-          agentTokenId: row.agent_token_id,
-          total: row.total,
-          reasoning: row.reasoning,
-          scores: JSON.parse(String(row.scores_json)),
-        })),
+        rankings: evals.map((row, index) => {
+          const modelId = String(row.model_id ?? "");
+          const offline = modelId.includes("offline");
+          return {
+            rank: index + 1,
+            agentTokenId: row.agent_token_id,
+            total: row.total,
+            reasoning: row.reasoning,
+            scores: JSON.parse(String(row.scores_json)),
+            modelId,
+            promptVersion: String(row.prompt_version ?? ""),
+            evalSource: offline ? ("offline" as const) : ("compute" as const),
+          };
+        }),
       };
     }
 

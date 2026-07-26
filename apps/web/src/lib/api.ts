@@ -42,6 +42,9 @@ export type MissionAudit = {
     total: number;
     reasoning: string;
     scores?: Record<string, number>;
+    modelId?: string;
+    promptVersion?: string;
+    evalSource?: "compute" | "offline";
   }>;
   revealedCriteria?: string;
   solutionNotes?: string;

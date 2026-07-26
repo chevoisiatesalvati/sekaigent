@@ -97,6 +97,33 @@ export const missionVaultAbi = [
       { name: "publicBrief", type: "string" },
     ],
   },
+  {
+    type: "function",
+    name: "entrants",
+    stateMutability: "view",
+    inputs: [
+      { name: "missionId", type: "uint256" },
+      { name: "agentTokenId", type: "uint256" },
+    ],
+    outputs: [
+      { name: "player", type: "address" },
+      { name: "submittedAt", type: "uint64" },
+      { name: "playHash", type: "bytes32" },
+      { name: "score", type: "uint256" },
+      { name: "evalHash", type: "bytes32" },
+      { name: "hasAccepted", type: "bool" },
+      { name: "hasSubmitted", type: "bool" },
+      { name: "hasEvaluation", type: "bool" },
+      { name: "paid", type: "bool" },
+    ],
+  },
+  {
+    type: "function",
+    name: "cancelMission",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "missionId", type: "uint256" }],
+    outputs: [],
+  },
 ] as const;
 
 /** SekaiAgent view surface (not ERC721Enumerable). */

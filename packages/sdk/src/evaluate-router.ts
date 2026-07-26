@@ -34,6 +34,12 @@ export type EvaluateRouterConfig = {
 const DEFAULT_BASE_URL = "https://router-api.0g.ai/v1";
 const DEFAULT_MODEL = "zai-org/GLM-5-FP8";
 
+/** OpenAI seed must be a 32-bit int; evaluationSeed is hex without 0x. */
+export function seedHexToOpenAiInt(seedHex: string): number {
+  const normalized = seedHex.startsWith("0x") ? seedHex : `0x${seedHex}`;
+  return Number(BigInt(normalized) % BigInt(2_147_483_647));
+}
+
 function buildEvalUserPrompt(input: EvaluateInput, seed: string): string {
   return JSON.stringify({
     promptVersion: EVAL_PROMPT_VERSION,
@@ -59,25 +65,42 @@ function tryParseEvaluation(
   try {
     const raw = JSON.parse(text.slice(start, end + 1)) as {
       scores?: Partial<Record<keyof typeof RUBRIC_MAX, number>>;
+      objectiveFit?: number;
+      constraintCompliance?: number;
+      tradecraftQuality?: number;
+      characterConsistency?: number;
       total?: number;
       reasoning?: string;
     };
+    // Router models often return flat score fields; nested `scores` also accepted.
+    const nested = raw.scores ?? {};
     const scores = {
       objectiveFit: Math.min(
         RUBRIC_MAX.objectiveFit,
-        Math.max(0, Number(raw.scores?.objectiveFit ?? 0)),
+        Math.max(0, Number(nested.objectiveFit ?? raw.objectiveFit ?? 0)),
       ),
       constraintCompliance: Math.min(
         RUBRIC_MAX.constraintCompliance,
-        Math.max(0, Number(raw.scores?.constraintCompliance ?? 0)),
+        Math.max(
+          0,
+          Number(nested.constraintCompliance ?? raw.constraintCompliance ?? 0),
+        ),
       ),
       tradecraftQuality: Math.min(
         RUBRIC_MAX.tradecraftQuality,
-        Math.max(0, Number(raw.scores?.tradecraftQuality ?? 0)),
+        Math.max(
+          0,
+          Number(nested.tradecraftQuality ?? raw.tradecraftQuality ?? 0),
+        ),
       ),
       characterConsistency: Math.min(
         RUBRIC_MAX.characterConsistency,
-        Math.max(0, Number(raw.scores?.characterConsistency ?? 0)),
+        Math.max(
+          0,
+          Number(
+            nested.characterConsistency ?? raw.characterConsistency ?? 0,
+          ),
+        ),
       ),
     };
     const total =
@@ -90,7 +113,7 @@ function tryParseEvaluation(
       agentTokenId: input.play.agentTokenId,
       playHash: input.play.playHash,
       scores,
-      total: Number.isFinite(raw.total) ? Number(raw.total) : total,
+      total,
       reasoning: String(raw.reasoning ?? "Router rubric evaluation."),
       modelId,
       promptVersion: EVAL_PROMPT_VERSION,
@@ -148,7 +171,7 @@ export async function evaluateMissionPlayViaRouter(
       const completion = await client.chat.completions.create({
         model,
         temperature: 0,
-        seed: Number(BigInt(seed) % BigInt(2_147_483_647)),
+        seed: seedHexToOpenAiInt(seed),
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },

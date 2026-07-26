@@ -231,37 +231,7 @@ export function useSealOnChain() {
 
     try {
       const endsAtMs = new Date(input.mission.ends_at).getTime();
-      const nowMs = Date.now();
-      // #region agent log
-      fetch("http://127.0.0.1:7600/ingest/f6ac1593-9cf9-472c-9362-2e12527cc795", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "86162c",
-        },
-        body: JSON.stringify({
-          sessionId: "86162c",
-          runId: "post-fix",
-          hypothesisId: "A",
-          location: "useChainActions.ts:sealOnChain-deadline",
-          message: "seal deadline gate",
-          data: {
-            missionApiId: input.mission.id,
-            title: input.mission.title,
-            status: input.mission.status,
-            onChainId: chainMissionId,
-            ends_at: input.mission.ends_at,
-            endsAtMs,
-            nowMs,
-            pastDeadline: Number.isFinite(endsAtMs) && nowMs >= endsAtMs,
-            agentTokenId: tokenIdStr,
-            agentCodename: input.agent.codename,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-      if (Number.isFinite(endsAtMs) && nowMs >= endsAtMs) {
+      if (Number.isFinite(endsAtMs) && Date.now() >= endsAtMs) {
         const error =
           "Case deadline has passed — accept/submit window is closed. Create a new demo case in Bureau.";
         setStatus(error);

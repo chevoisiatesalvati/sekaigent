@@ -138,37 +138,6 @@ export function BriefScreen() {
     ) {
       return;
     }
-    // #region agent log
-    fetch("http://127.0.0.1:7600/ingest/f6ac1593-9cf9-472c-9362-2e12527cc795", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "86162c",
-      },
-      body: JSON.stringify({
-        sessionId: "86162c",
-        runId: "post-fix",
-        hypothesisId: "B",
-        location: "BriefScreen.tsx:startOrders",
-        message: "brief start orders",
-        data: {
-          missionId: mission!.id,
-          title: mission!.title,
-          status: mission!.status,
-          ends_at: mission!.ends_at,
-          on_chain_id: mission!.on_chain_id,
-          acceptingOrders,
-          caseOpen,
-          canSealOnChain,
-          pastDeadline: Date.now() >= new Date(mission!.ends_at).getTime(),
-          agentId: selected.id,
-          agentCodename: selected.codename,
-          dossierNumber: selected.dossierNumber ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     beginLoadout(mission!, selected, signals);
     openLoadout(mission!.id);
   }

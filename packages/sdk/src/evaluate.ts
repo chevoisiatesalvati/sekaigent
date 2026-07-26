@@ -44,16 +44,28 @@ export function evaluateMissionPlayOffline(
   }
   characterConsistency = Math.max(0, characterConsistency);
 
-  const objectiveFit: number = Math.min(
+  let objectiveFit: number = Math.min(
     RUBRIC_MAX.objectiveFit,
     10 + input.play.steps.length * 4,
   );
-  const tradecraftQuality: number = Math.min(
+  // Prefer criteria-aligned language when Router is unavailable (demo fallback).
+  if (criteria.includes("night") && playText.includes("night")) {
+    objectiveFit = Math.min(RUBRIC_MAX.objectiveFit, objectiveFit + 2);
+  }
+  if (criteria.includes("stealth") && /(stealth|quiet|shadow|soft)/.test(playText)) {
+    objectiveFit = Math.min(RUBRIC_MAX.objectiveFit, objectiveFit + 2);
+  }
+
+  let tradecraftQuality: number = Math.min(
     RUBRIC_MAX.tradecraftQuality,
     8 +
       input.play.contingencies.length * 5 +
       input.play.risksAccepted.length * 3,
   );
+  const leadSkill = input.play.resourcesUsed[0]?.toLowerCase() ?? "";
+  if (leadSkill && (input.agent.skills[leadSkill as keyof typeof input.agent.skills] ?? 0) >= 60) {
+    tradecraftQuality = Math.min(RUBRIC_MAX.tradecraftQuality, tradecraftQuality + 3);
+  }
 
   const scores = {
     objectiveFit,

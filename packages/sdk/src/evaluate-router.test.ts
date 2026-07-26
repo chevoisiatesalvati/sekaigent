@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { AgentPrivateIntel, MissionPlay } from "@sekaigent/game-schemas";
-import { evaluateMissionPlayViaRouter } from "./evaluate-router.js";
+import {
+  evaluateMissionPlayViaRouter,
+  seedHexToOpenAiInt,
+} from "./evaluate-router.js";
 
 const agent: AgentPrivateIntel = {
   personality: "quiet",
@@ -35,6 +38,16 @@ const play: MissionPlay = {
     "0x1111111111111111111111111111111111111111111111111111111111111111",
   submittedAt: 1_700_000_000,
 };
+
+describe("seedHexToOpenAiInt", () => {
+  it("accepts bare hex from evaluationSeed", () => {
+    const n = seedHexToOpenAiInt(
+      "ceef080d7acc8e980c6158b7863bb8f9df8c22e4da71e32795499dac627ca81b",
+    );
+    assert.ok(Number.isInteger(n));
+    assert.ok(n >= 0 && n < 2_147_483_647);
+  });
+});
 
 describe("evaluateMissionPlayViaRouter", () => {
   it("falls back offline when no key", async () => {
@@ -79,5 +92,32 @@ describe("evaluateMissionPlayViaRouter", () => {
     );
     assert.equal(result.source, "compute");
     assert.equal(result.evaluation.total, 92);
+  });
+
+  it("parses flat Router score fields", async () => {
+    const result = await evaluateMissionPlayViaRouter(
+      {
+        missionId: "1",
+        publicBrief: "Recover manifest",
+        hiddenCriteria: "no bribes; stealth only",
+        play,
+        agent,
+      },
+      {
+        allowOffline: false,
+        complete: async () =>
+          JSON.stringify({
+            objectiveFit: 23,
+            constraintCompliance: 25,
+            tradecraftQuality: 20,
+            characterConsistency: 19,
+            total: 87,
+            reasoning: "Flat shape from Router.",
+          }),
+      },
+    );
+    assert.equal(result.source, "compute");
+    assert.equal(result.evaluation.total, 87);
+    assert.equal(result.evaluation.scores.tradecraftQuality, 20);
   });
 });

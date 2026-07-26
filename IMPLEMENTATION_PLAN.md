@@ -564,3 +564,13 @@ releaseDeployment clears local desk rows without on-chain cancel.
 
 Orders gated on open status AND ends_at; expired cases cannot brief/seal.
 Return to squad blocked for on-chain plays on still-accepting cases.
+
+### 12.8 — Done
+
+SettleJobService injects MissionsService via @Inject (tsx DI gap).
+Fixes stuck evaluating missions after Bureau reveal.
+
+### 12.9 — Done
+
+Fixed Router eval seed (hex→OpenAI int); Demo #3 was offline identical scores.
+Debrief shows per-agent rubric bars, reasoning, and compute vs desk source.

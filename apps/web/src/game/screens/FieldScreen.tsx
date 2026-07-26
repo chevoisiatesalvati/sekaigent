@@ -111,42 +111,9 @@ export function FieldScreen() {
                       type="button"
                       className="btn ghost"
                       title={COPY.returnToSquadHint}
-                      onClick={() => {
-                        // #region agent log
-                        fetch(
-                          "http://127.0.0.1:7600/ingest/f6ac1593-9cf9-472c-9362-2e12527cc795",
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              "X-Debug-Session-Id": "86162c",
-                            },
-                            body: JSON.stringify({
-                              sessionId: "86162c",
-                              runId: "post-fix",
-                              hypothesisId: "C",
-                              location: "FieldScreen.tsx:returnToSquad",
-                              message: "release deployment clicked",
-                              data: {
-                                missionId: d.missionId,
-                                agentId: d.agentId,
-                                status: d.status,
-                                allowed: true,
-                                hasPlayHash: Boolean(d.playHash),
-                                hasAcceptTx: Boolean(d.acceptTxHash),
-                                hasSubmitTx: Boolean(d.submitTxHash),
-                                hasChainError: Boolean(d.chainError),
-                                missionStatus: titleFor(d.missionId)?.status,
-                                missionEndsAt: titleFor(d.missionId)?.ends_at,
-                                onChainId: titleFor(d.missionId)?.on_chain_id,
-                              },
-                              timestamp: Date.now(),
-                            }),
-                          },
-                        ).catch(() => {});
-                        // #endregion
-                        releaseDeployment(d.missionId, d.agentId);
-                      }}
+                      onClick={() =>
+                        releaseDeployment(d.missionId, d.agentId)
+                      }
                     >
                       {COPY.returnToSquad}
                     </button>

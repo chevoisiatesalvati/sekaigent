@@ -62,6 +62,7 @@ export {
 } from "./evaluate.js";
 export {
   evaluateMissionPlayViaRouter,
+  seedHexToOpenAiInt,
   type EvaluateRouterResult,
   type EvaluateRouterConfig,
 } from "./evaluate-router.js";
