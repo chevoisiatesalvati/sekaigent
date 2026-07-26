@@ -11,6 +11,7 @@ import {
   type Object3D,
 } from "three";
 import { REGIONS, type MissionListItem } from "@/lib/api";
+import { isMissionAcceptingOrders } from "@/lib/format";
 import { WebglDispose } from "./WebglDispose";
 
 type ControlsLike = {
@@ -176,7 +177,7 @@ function TexturedGlobe({
         position[2] * lift,
       ];
       const regionMissions = missions.filter((m) => m.region_id === region.id);
-      const open = regionMissions.find((m) => m.status === "open");
+      const open = regionMissions.find((m) => isMissionAcceptingOrders(m));
       const settled = regionMissions.find((m) => m.status === "settled");
       const mission = open ?? settled ?? regionMissions[0];
       return { region, position, labelOffset, mission, open: Boolean(open) };

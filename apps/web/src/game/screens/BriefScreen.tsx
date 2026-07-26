@@ -14,7 +14,11 @@ import {
   regionLore,
   statusLabel,
 } from "@/lib/copy";
-import { formatCountdown, formatOgFromWei } from "@/lib/format";
+import {
+  formatCountdown,
+  formatOgFromWei,
+  isMissionAcceptingOrders,
+} from "@/lib/format";
 import { useUiStore } from "../stores/uiStore";
 import { useSquadStore, agentPortraitSrc } from "../stores/squadStore";
 import { useFieldStore } from "../stores/fieldStore";
@@ -112,7 +116,8 @@ export function BriefScreen() {
   const canStartOrders = signals.length >= 1 && signals.length <= 4;
   const liveChainId = missionChainId(mission);
   const canSealOnChain = liveChainId != null;
-  const caseOpen = mission.status === "open";
+  const acceptingOrders = isMissionAcceptingOrders(mission);
+  const caseOpen = acceptingOrders;
 
   function applyMark(mark: PageMark) {
     if (!activeDoc) return;
@@ -124,9 +129,46 @@ export function BriefScreen() {
   }
 
   function startOrders() {
-    if (!selected || !isConnected || agents.length === 0 || !canStartOrders) {
+    if (
+      !selected ||
+      !isConnected ||
+      agents.length === 0 ||
+      !canStartOrders ||
+      !acceptingOrders
+    ) {
       return;
     }
+    // #region agent log
+    fetch("http://127.0.0.1:7600/ingest/f6ac1593-9cf9-472c-9362-2e12527cc795", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "86162c",
+      },
+      body: JSON.stringify({
+        sessionId: "86162c",
+        runId: "post-fix",
+        hypothesisId: "B",
+        location: "BriefScreen.tsx:startOrders",
+        message: "brief start orders",
+        data: {
+          missionId: mission!.id,
+          title: mission!.title,
+          status: mission!.status,
+          ends_at: mission!.ends_at,
+          on_chain_id: mission!.on_chain_id,
+          acceptingOrders,
+          caseOpen,
+          canSealOnChain,
+          pastDeadline: Date.now() >= new Date(mission!.ends_at).getTime(),
+          agentId: selected.id,
+          agentCodename: selected.codename,
+          dossierNumber: selected.dossierNumber ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     beginLoadout(mission!, selected, signals);
     openLoadout(mission!.id);
   }
@@ -299,6 +341,8 @@ export function BriefScreen() {
             >
               Open debrief
             </button>
+          ) : mission.status === "open" ? (
+            <p className="empty-note">{COPY.caseDeadlinePassed}</p>
           ) : (
             <p className="empty-note">This case is not open for orders.</p>
           )

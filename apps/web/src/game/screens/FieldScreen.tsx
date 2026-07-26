@@ -7,12 +7,15 @@ import {
   regionName,
   type MissionListItem,
 } from "@/lib/api";
+import { isMissionAcceptingOrders } from "@/lib/format";
 import { useUiStore } from "../stores/uiStore";
 import { useFieldStore } from "../stores/fieldStore";
 import { agentPortraitSrc, useSquadStore } from "../stores/squadStore";
+import type { FieldDeployment } from "../types";
 
 export function FieldScreen() {
   const deployments = useFieldStore((s) => s.deployments);
+  const releaseDeployment = useFieldStore((s) => s.releaseDeployment);
   const agents = useSquadStore((s) => s.agents);
   const openBrief = useUiStore((s) => s.openBrief);
   const openDebrief = useUiStore((s) => s.openDebrief);
@@ -37,6 +40,18 @@ export function FieldScreen() {
       missions.find((m) => m.id === missionId) ??
       missions.find((m) => String(m.on_chain_id) === missionId)
     );
+  }
+
+  /** Desk-only / failed seals can return; on-chain plays on still-open cases cannot. */
+  function canReturnToSquad(d: FieldDeployment): boolean {
+    if (d.chainError) return true;
+    const mission = titleFor(d.missionId);
+    if (!mission) return true;
+    if (!isMissionAcceptingOrders(mission)) return true;
+    const committedOnChain = Boolean(
+      d.playHash || d.acceptTxHash || d.submitTxHash,
+    );
+    return !committedOnChain;
   }
 
   return (
@@ -83,13 +98,67 @@ export function FieldScreen() {
                     </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={() => openBrief(d.missionId)}
-                >
-                  Case
-                </button>
+                <div className="action-row">
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => openBrief(d.missionId)}
+                  >
+                    Case
+                  </button>
+                  {canReturnToSquad(d) ? (
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      title={COPY.returnToSquadHint}
+                      onClick={() => {
+                        // #region agent log
+                        fetch(
+                          "http://127.0.0.1:7600/ingest/f6ac1593-9cf9-472c-9362-2e12527cc795",
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "X-Debug-Session-Id": "86162c",
+                            },
+                            body: JSON.stringify({
+                              sessionId: "86162c",
+                              runId: "post-fix",
+                              hypothesisId: "C",
+                              location: "FieldScreen.tsx:returnToSquad",
+                              message: "release deployment clicked",
+                              data: {
+                                missionId: d.missionId,
+                                agentId: d.agentId,
+                                status: d.status,
+                                allowed: true,
+                                hasPlayHash: Boolean(d.playHash),
+                                hasAcceptTx: Boolean(d.acceptTxHash),
+                                hasSubmitTx: Boolean(d.submitTxHash),
+                                hasChainError: Boolean(d.chainError),
+                                missionStatus: titleFor(d.missionId)?.status,
+                                missionEndsAt: titleFor(d.missionId)?.ends_at,
+                                onChainId: titleFor(d.missionId)?.on_chain_id,
+                              },
+                              timestamp: Date.now(),
+                            }),
+                          },
+                        ).catch(() => {});
+                        // #endregion
+                        releaseDeployment(d.missionId, d.agentId);
+                      }}
+                    >
+                      {COPY.returnToSquad}
+                    </button>
+                  ) : (
+                    <span
+                      className="empty-note"
+                      title={COPY.returnToSquadLocked}
+                    >
+                      Locked on case
+                    </span>
+                  )}
+                </div>
               </li>
             );
           })}

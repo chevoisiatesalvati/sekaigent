@@ -33,6 +33,7 @@ export const DURATION_LABELS: Record<string, string> = {
   daily: "Daily case",
   weekly: "Weekly case",
   monthly: "Monthly case",
+  demo: "5-minute demo",
 };
 
 export const REGION_LORE: Record<string, string> = {
@@ -77,6 +78,13 @@ export const COPY = {
   deployedOnCase: "Already in the field",
   deployAnother: "Send another operative",
   inTheField: "In the field",
+  returnToSquad: "Return to squad",
+  returnToSquadHint:
+    "Frees a desk-only lock. Operatives with sealed plays on an open case stay deployed until debrief.",
+  returnToSquadLocked:
+    "On-chain on an open case — wait for debrief (or cancel) to free them.",
+  caseDeadlinePassed:
+    "Deadline passed — accept/submit is closed. Create a new demo case in Bureau.",
   dossierMarkHelp:
     "Judge each page against the objective: Signal = use this lead. Noise = ignore it. Mark at least one Signal before briefing.",
   markSignal: "Signal",

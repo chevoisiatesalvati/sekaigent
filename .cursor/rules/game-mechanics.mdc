@@ -16,7 +16,7 @@ Private (encrypted 0G Storage): personality, skills (infiltration, socialEnginee
 
 `criteriaCommitment = keccak256(abi.encodePacked(hiddenCriteria, salt))` published at creation; criteria revealed after `endsAt`.
 
-Durations: daily | weekly | monthly. Status: scheduled | open | evaluating | settled | cancelled.
+Durations: daily | weekly | monthly | demo (5-minute Bureau test window). Status: scheduled | open | evaluating | settled | cancelled.
 
 ## MissionPlay
 

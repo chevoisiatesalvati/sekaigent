@@ -544,3 +544,23 @@ redirects to case Brief (not Field) so the new deployment is visible immediately
 
 Bureau rail and admin forms gated on MissionVault ADMIN_ROLE (connected deployer wallet).
 Admin API Bearer is the wallet address matching ADMIN_ADDRESS; HMAC token field removed.
+
+### 12.4 — Done
+
+Added `demo` mission duration (5-minute endsAt) for Bureau testing; default in create form.
+Schema, copy label, and create payload types accept `demo`.
+
+### 12.5 — Done
+
+Hardened seal receipt wait for flaky 0G RPC; skip accept if already accepted.
+SealScreen no longer uses useEffectEvent (Next compiled React gap).
+
+### 12.6 — Done
+
+Failed seals no longer lock operatives on Field; Field has Return to squad.
+releaseDeployment clears local desk rows without on-chain cancel.
+
+### 12.7 — Done
+
+Orders gated on open status AND ends_at; expired cases cannot brief/seal.
+Return to squad blocked for on-chain plays on still-accepting cases.

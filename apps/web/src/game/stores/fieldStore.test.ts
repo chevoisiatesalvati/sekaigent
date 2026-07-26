@@ -34,6 +34,20 @@ describe("fieldStore multi-agent deployments", () => {
     assert.ok(useFieldStore.getState().getActiveForAgent("agent-b"));
   });
 
+  it("releaseDeployment frees the operative", () => {
+    useFieldStore.setState({
+      ownerKey: "test",
+      deployments: [],
+      hydrated: true,
+    });
+    useFieldStore.getState().deploy("m1", "agent-a", emptyDraft, {
+      playHash: "0x1",
+    });
+    useFieldStore.getState().releaseDeployment("m1", "agent-a");
+    assert.equal(useFieldStore.getState().getDeploymentsForMission("m1").length, 0);
+    assert.equal(useFieldStore.getState().getActiveForAgent("agent-a"), undefined);
+  });
+
   it("replaces only the same agent on redeploy", () => {
     useFieldStore.setState({
       ownerKey: "test",

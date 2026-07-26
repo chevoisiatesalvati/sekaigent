@@ -9,6 +9,7 @@ import {
   type MissionListItem,
 } from "@/lib/api";
 import { COPY, regionLore, statusLabel } from "@/lib/copy";
+import { isMissionAcceptingOrders } from "@/lib/format";
 import { useUiStore } from "../stores/uiStore";
 import { useSquadStore } from "../stores/squadStore";
 
@@ -56,7 +57,7 @@ export function MapScreen() {
       return;
     }
     const fallback =
-      ordered.find((m) => m.status === "open") ?? ordered[0] ?? null;
+      ordered.find((m) => isMissionAcceptingOrders(m)) ?? ordered[0] ?? null;
     if (fallback) selectMission(fallback.id);
   }, [ordered, selectedMissionId, selectMission]);
 
@@ -134,10 +135,13 @@ export function MapScreen() {
                 </span>
                 <span
                   className={`chip ${
-                    selected.status === "open" ? "open" : "settled"
+                    isMissionAcceptingOrders(selected) ? "open" : "settled"
                   }`}
                 >
-                  {statusLabel(selected.status)}
+                  {selected.status === "open" &&
+                  !isMissionAcceptingOrders(selected)
+                    ? "Deadline passed"
+                    : statusLabel(selected.status)}
                 </span>
                 <span className="chip">{regionName(selected.region_id)}</span>
               </div>

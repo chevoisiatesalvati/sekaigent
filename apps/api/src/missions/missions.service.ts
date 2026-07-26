@@ -29,7 +29,7 @@ export type CreateMissionInput = {
     title: string;
     body: string;
   }>;
-  duration: "daily" | "weekly" | "monthly";
+  duration: "daily" | "weekly" | "monthly" | "demo";
   startsAt: string;
   endsAt: string;
   entryFeeWei: string;
@@ -158,12 +158,34 @@ export class MissionsService {
     if (!mission.hidden_criteria || !mission.salt) {
       throw new Error("missing_criteria_or_salt");
     }
+    if (String(mission.status) === "evaluating" || String(mission.status) === "settled") {
+      throw new Error("mission_already_revealed");
+    }
     const endsAt = new Date(String(mission.ends_at)).getTime();
     if (Date.now() < endsAt) throw new Error("mission_still_open");
     if (!config.adminPrivateKey) throw new Error("ADMIN_PRIVATE_KEY unset");
 
     const wallet = createOgWalletClient(config.adminPrivateKey);
     const publicClient = createOgPublicClient();
+
+    // Sync with chain: status 2 = Evaluating means criteria already revealed.
+    const onChain = (await publicClient.readContract({
+      address: config.missionVaultAddress,
+      abi: missionVaultAbi,
+      functionName: "missions",
+      args: [BigInt(String(onChainId))],
+    })) as readonly unknown[];
+    const onChainStatus = Number(onChain[8]);
+    const criteriaRevealed = Boolean(onChain[9]);
+    if (criteriaRevealed || onChainStatus >= 2) {
+      const pool = await getPool();
+      await pool.query(
+        `UPDATE missions SET status = 'evaluating' WHERE id = $1 AND status <> 'settled'`,
+        [id],
+      );
+      throw new Error("mission_already_revealed");
+    }
+
     const hash = await wallet.writeContract({
       address: config.missionVaultAddress,
       abi: missionVaultAbi,

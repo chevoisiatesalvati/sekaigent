@@ -10,6 +10,7 @@ import {
   weiStringToBigInt,
 } from "@/lib/contracts";
 import { OG_CHAIN_ID } from "@/lib/chain";
+import { waitForOgReceipt } from "@/lib/ogReceipt";
 import { hashMissionPlayDraft } from "@/lib/playHash";
 import {
   missionChainId,
@@ -118,9 +119,10 @@ export function useMintAgent() {
         functionName: "mint",
         args: [address, encryptedURI, metadataHash],
       });
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-      });
+      const receipt = await waitForOgReceipt(publicClient, txHash);
+      if (receipt.status !== "success") {
+        throw new Error("Mint transaction reverted on-chain.");
+      }
       const tokenId = String(nextBefore);
       await registerAgentCard({
         tokenId,
@@ -228,16 +230,100 @@ export function useSealOnChain() {
     }
 
     try {
-      setStatus("Accepting case (paying mission tax)…");
-      const value = weiStringToBigInt(input.mission.entry_fee_wei);
-      const acceptTxHash = await writeContractAsync({
+      const endsAtMs = new Date(input.mission.ends_at).getTime();
+      const nowMs = Date.now();
+      // #region agent log
+      fetch("http://127.0.0.1:7600/ingest/f6ac1593-9cf9-472c-9362-2e12527cc795", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "86162c",
+        },
+        body: JSON.stringify({
+          sessionId: "86162c",
+          runId: "post-fix",
+          hypothesisId: "A",
+          location: "useChainActions.ts:sealOnChain-deadline",
+          message: "seal deadline gate",
+          data: {
+            missionApiId: input.mission.id,
+            title: input.mission.title,
+            status: input.mission.status,
+            onChainId: chainMissionId,
+            ends_at: input.mission.ends_at,
+            endsAtMs,
+            nowMs,
+            pastDeadline: Number.isFinite(endsAtMs) && nowMs >= endsAtMs,
+            agentTokenId: tokenIdStr,
+            agentCodename: input.agent.codename,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+      if (Number.isFinite(endsAtMs) && nowMs >= endsAtMs) {
+        const error =
+          "Case deadline has passed — accept/submit window is closed. Create a new demo case in Bureau.";
+        setStatus(error);
+        return { playHash, storageUri, localOnly: true, error };
+      }
+
+      const entrant = (await publicClient.readContract({
         address: MAINNET_ADDRESSES.missionVault,
         abi: missionVaultAbi,
-        functionName: "acceptMission",
+        functionName: "entrants",
         args: [onChainId, tokenId],
-        value,
-      });
-      await publicClient.waitForTransactionReceipt({ hash: acceptTxHash });
+      })) as readonly [
+        `0x${string}`,
+        bigint,
+        `0x${string}`,
+        bigint,
+        `0x${string}`,
+        boolean,
+        boolean,
+        boolean,
+        boolean,
+      ];
+      const alreadyAccepted = entrant[5];
+      const alreadySubmitted = entrant[6];
+
+      if (alreadySubmitted) {
+        setStatus("Orders already on chain for this operative.");
+        const onChainPlayHash = entrant[2];
+        const zeroHash = `0x${"0".repeat(64)}` as const;
+        return {
+          playHash:
+            onChainPlayHash && onChainPlayHash !== zeroHash
+              ? onChainPlayHash
+              : playHash,
+          storageUri,
+          localOnly: false,
+        };
+      }
+
+      let acceptTxHash: string | undefined;
+      if (!alreadyAccepted) {
+        setStatus("Accepting case (paying mission tax)…");
+        const value = weiStringToBigInt(input.mission.entry_fee_wei);
+        acceptTxHash = await writeContractAsync({
+          address: MAINNET_ADDRESSES.missionVault,
+          abi: missionVaultAbi,
+          functionName: "acceptMission",
+          args: [onChainId, tokenId],
+          value,
+        });
+        const acceptReceipt = await waitForOgReceipt(
+          publicClient,
+          acceptTxHash,
+        );
+        if (acceptReceipt.status !== "success") {
+          throw new Error(
+            `Accept reverted — check tax/window. Tx ${acceptTxHash.slice(0, 12)}…`,
+          );
+        }
+      } else {
+        setStatus("Already accepted — submitting orders…");
+      }
 
       setStatus("Submitting sealed orders…");
       const submitTxHash = await writeContractAsync({
@@ -246,7 +332,12 @@ export function useSealOnChain() {
         functionName: "submitPlay",
         args: [onChainId, tokenId, playHash],
       });
-      await publicClient.waitForTransactionReceipt({ hash: submitTxHash });
+      const submitReceipt = await waitForOgReceipt(publicClient, submitTxHash);
+      if (submitReceipt.status !== "success") {
+        throw new Error(
+          `Submit reverted. Tx ${submitTxHash.slice(0, 12)}…`,
+        );
+      }
       setStatus("Orders on chain.");
       return {
         playHash,
@@ -257,7 +348,7 @@ export function useSealOnChain() {
       };
     } catch (err) {
       const message =
-        err instanceof Error ? err.message.slice(0, 160) : "Chain seal failed";
+        err instanceof Error ? err.message.slice(0, 200) : "Chain seal failed";
       setStatus(message);
       return { playHash, storageUri, localOnly: true, error: message };
     }

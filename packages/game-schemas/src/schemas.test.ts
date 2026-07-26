@@ -104,6 +104,25 @@ describe("MissionSchema", () => {
     assert.equal(mission.caseFile.length, 1);
   });
 
+  it("accepts demo duration", () => {
+    const mission = MissionSchema.parse({
+      id: "m-demo",
+      regionId: "harbor",
+      title: "Flash Harbor",
+      publicBrief: "Five-minute window.",
+      duration: "demo",
+      startsAt: 1,
+      endsAt: 301,
+      entryFeeWei: "1000000000000000",
+      prizePoolWei: "0",
+      maxEntrants: 10,
+      status: "open",
+      criteriaCommitment: validHash,
+      rubricId: "default-v1",
+    });
+    assert.equal(mission.duration, "demo");
+  });
+
   it("rejects bad criteria commitment", () => {
     assert.throws(() =>
       MissionSchema.parse({

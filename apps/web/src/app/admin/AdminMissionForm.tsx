@@ -6,6 +6,9 @@ import type { CaseDocument, CaseDocumentKind } from "@sekaigent/game-schemas";
 import { createMissionAdmin, REGIONS } from "@/lib/api";
 import { ogAmountToWei } from "@/lib/contracts";
 import { useIsVaultAdmin } from "@/game/hooks/useIsVaultAdmin";
+import type { MissionDuration } from "@sekaigent/game-schemas";
+
+const DEMO_DURATION_MS = 5 * 60 * 1000;
 
 const KINDS: CaseDocumentKind[] = [
   "clipping",
@@ -44,9 +47,7 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
     "Signal vs noise notes for debrief.",
   );
   const [taxOg, setTaxOg] = useState("0.001");
-  const [duration, setDuration] = useState<"daily" | "weekly" | "monthly">(
-    "daily",
-  );
+  const [duration, setDuration] = useState<MissionDuration>("demo");
   const [docs, setDocs] = useState<CaseDocument[]>([emptyDoc()]);
   const [result, setResult] = useState("");
 
@@ -56,6 +57,14 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
     );
   }
 
+  function endsAtForDuration(kind: MissionDuration): string {
+    const ms =
+      kind === "demo"
+        ? DEMO_DURATION_MS
+        : (kind === "daily" ? 1 : kind === "weekly" ? 7 : 30) * 86400000;
+    return new Date(Date.now() + ms).toISOString();
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!address || !isAdmin) {
@@ -63,11 +72,7 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
       return;
     }
     const startsAt = new Date().toISOString();
-    const endsAt = new Date(
-      Date.now() +
-        (duration === "daily" ? 1 : duration === "weekly" ? 7 : 30) *
-          86400000,
-    ).toISOString();
+    const endsAt = endsAtForDuration(duration);
     try {
       const entryFeeWei = ogAmountToWei(taxOg).toString();
       const body = await createMissionAdmin(address, {
@@ -232,10 +237,9 @@ export function AdminMissionForm({ onCreated }: AdminMissionFormProps) {
         <select
           id="admin-duration"
           value={duration}
-          onChange={(e) =>
-            setDuration(e.target.value as "daily" | "weekly" | "monthly")
-          }
+          onChange={(e) => setDuration(e.target.value as MissionDuration)}
         >
+          <option value="demo">5-minute demo</option>
           <option value="daily">Daily case</option>
           <option value="weekly">Weekly case</option>
           <option value="monthly">Monthly case</option>

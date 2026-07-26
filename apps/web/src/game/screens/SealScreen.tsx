@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { COPY } from "@/lib/copy";
 import { fetchMission, missionChainId, type MissionListItem } from "@/lib/api";
@@ -10,7 +10,7 @@ import { useFieldStore } from "../stores/fieldStore";
 import { useSquadStore, agentPortraitSrc } from "../stores/squadStore";
 import { useSealOnChain } from "../hooks/useChainActions";
 import { useIsVaultAdmin } from "../hooks/useIsVaultAdmin";
-import type { MissionPlayDraft, SquadAgent } from "../types";
+import type { MissionPlayDraft } from "../types";
 
 type SealPhase = "working" | "done" | "failed";
 
@@ -34,6 +34,8 @@ const sealJobs = new Map<string, Promise<SealJobResult>>();
  * 2) Record playHash + storage URI on the API
  * 3) If mission has on_chain_id + agent dossier #: acceptMission (tax) + submitPlay
  * 4) Persist deployment on Field desk → return to case file
+ *
+ * Note: avoid useEffectEvent — Next's compiled React client may not export it.
  */
 export function SealScreen() {
   const missionId = useUiStore((s) => s.selectedMissionId);
@@ -55,137 +57,21 @@ export function SealScreen() {
   const [retryToken, setRetryToken] = useState(0);
   const mounted = useRef(true);
 
+  /** Latest deps for the seal effect without restarting the job on status ticks. */
+  const latestRef = useRef({
+    deploy,
+    resetLoadout,
+    openBrief,
+    sealOnChain,
+  });
+  latestRef.current = { deploy, resetLoadout, openBrief, sealOnChain };
+
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
     };
   }, []);
-
-  const applyResult = useEffectEvent(
-    (
-      result: SealJobResult,
-      ids: { missionId: string; agentId: string; draft: MissionPlayDraft },
-    ) => {
-      if (result.ok) {
-        deploy(ids.missionId, ids.agentId, ids.draft, {
-          playHash: result.playHash,
-          acceptTxHash: result.acceptTxHash,
-          submitTxHash: result.submitTxHash,
-        });
-        resetLoadout();
-        setDetail(result.detail ?? null);
-        setPhase("done");
-        window.setTimeout(() => {
-          if (mounted.current) openBrief(ids.missionId);
-        }, 1800);
-        return;
-      }
-
-      deploy(ids.missionId, ids.agentId, ids.draft, {
-        playHash: result.playHash,
-        acceptTxHash: result.acceptTxHash,
-        submitTxHash: result.submitTxHash,
-        chainError: result.error ?? "local_only",
-      });
-      setError(result.error ?? "Deployment did not finish on-chain.");
-      setDetail(result.detail ?? null);
-      setPhase("failed");
-    },
-  );
-
-  const startJob = useEffectEvent(
-    (input: {
-      jobKey: string;
-      missionId: string;
-      agentId: string;
-      agent: SquadAgent;
-      draft: MissionPlayDraft;
-    }) => {
-      const existing = sealJobs.get(input.jobKey);
-      if (existing) return existing;
-
-      const job = (async (): Promise<SealJobResult> => {
-        const mission = await fetchMission(input.missionId);
-        if (!mission) {
-          return { ok: false, error: "Case not found." };
-        }
-
-        const chainId = missionChainId(mission);
-        if (!chainId) {
-          return {
-            ok: false,
-            error:
-              "This case is not on-chain yet. Open Bureau, create a live case, then seal against that mission.",
-            detail: `Local id: ${mission.id}`,
-          };
-        }
-        if (!input.agent.dossierNumber) {
-          return {
-            ok: false,
-            error:
-              "This operative has no on-chain dossier number. Hire/mint on 0G Mainnet first.",
-          };
-        }
-
-        const result = await sealOnChain({
-          mission: mission as MissionListItem,
-          agent: input.agent,
-          draft: input.draft,
-        });
-
-        const detailLine =
-          [
-            result.acceptTxHash
-              ? `Accept ${result.acceptTxHash.slice(0, 10)}…`
-              : null,
-            result.submitTxHash
-              ? `Submit ${result.submitTxHash.slice(0, 10)}…`
-              : null,
-            result.storageUri && (result.error || result.localOnly)
-              ? `Storage: ${result.storageUri.slice(0, 18)}…`
-              : null,
-            result.playHash && (result.error || result.localOnly)
-              ? `playHash: ${result.playHash.slice(0, 12)}…`
-              : null,
-          ]
-            .filter(Boolean)
-            .join(" · ") || null;
-
-        if (result.error || result.localOnly) {
-          return {
-            ok: false,
-            error:
-              result.error ??
-              "Sealed to storage only — chain accept/submit did not complete.",
-            detail: detailLine,
-            playHash: result.playHash,
-            acceptTxHash: result.acceptTxHash,
-            submitTxHash: result.submitTxHash,
-            storageUri: result.storageUri,
-            localOnly: result.localOnly,
-          };
-        }
-
-        return {
-          ok: true,
-          detail: detailLine,
-          playHash: result.playHash,
-          acceptTxHash: result.acceptTxHash,
-          submitTxHash: result.submitTxHash,
-          storageUri: result.storageUri,
-        };
-      })();
-
-      sealJobs.set(input.jobKey, job);
-      void job.finally(() => {
-        window.setTimeout(() => {
-          sealJobs.delete(input.jobKey);
-        }, 8_000);
-      });
-      return job;
-    },
-  );
 
   useEffect(() => {
     if (!missionId || !agentId) {
@@ -214,19 +100,111 @@ export function SealScreen() {
     const draftSnapshot = draft;
     const agentSnapshot = agent;
 
-    void startJob({
-      jobKey,
-      missionId,
-      agentId,
-      agent: agentSnapshot,
-      draft: draftSnapshot,
-    }).then((result) => {
-      // Always apply — progress status re-renders must not drop success.
-      applyResult(result, {
-        missionId,
-        agentId,
-        draft: draftSnapshot,
+    const existing = sealJobs.get(jobKey);
+    const job =
+      existing ??
+      (async (): Promise<SealJobResult> => {
+        const mission = await fetchMission(missionId);
+        if (!mission) {
+          return { ok: false, error: "Case not found." };
+        }
+
+        const chainId = missionChainId(mission);
+        if (!chainId) {
+          return {
+            ok: false,
+            error:
+              "This case is not on-chain yet. Open Bureau, create a live case, then seal against that mission.",
+            detail: `Local id: ${mission.id}`,
+          };
+        }
+        if (!agentSnapshot.dossierNumber) {
+          return {
+            ok: false,
+            error:
+              "This operative has no on-chain dossier number. Hire/mint on 0G Mainnet first.",
+          };
+        }
+
+        const result = await latestRef.current.sealOnChain({
+          mission: mission as MissionListItem,
+          agent: agentSnapshot,
+          draft: draftSnapshot,
+        });
+
+        const detailLine =
+          [
+            result.acceptTxHash
+              ? `Accept ${result.acceptTxHash.slice(0, 10)}…`
+              : null,
+            result.submitTxHash
+              ? `Submit ${result.submitTxHash.slice(0, 10)}…`
+              : null,
+            result.storageUri && (result.error || result.localOnly)
+              ? `Storage: ${result.storageUri.slice(0, 18)}…`
+              : null,
+            result.playHash && (result.error || result.localOnly)
+              ? `playHash: ${result.playHash.slice(0, 12)}…`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || null;
+
+        if (result.error) {
+          return {
+            ok: false,
+            error: result.error,
+            detail: detailLine,
+            playHash: result.playHash,
+            acceptTxHash: result.acceptTxHash,
+            submitTxHash: result.submitTxHash,
+            storageUri: result.storageUri,
+            localOnly: result.localOnly,
+          };
+        }
+
+        return {
+          ok: true,
+          detail: detailLine,
+          playHash: result.playHash,
+          acceptTxHash: result.acceptTxHash,
+          submitTxHash: result.submitTxHash,
+          storageUri: result.storageUri,
+          localOnly: result.localOnly,
+        };
+      })();
+
+    if (!existing) {
+      sealJobs.set(jobKey, job);
+      void job.finally(() => {
+        window.setTimeout(() => {
+          sealJobs.delete(jobKey);
+        }, 8_000);
       });
+    }
+
+    void job.then((result) => {
+      const { deploy: deployFn, resetLoadout: resetFn, openBrief: briefFn } =
+        latestRef.current;
+      if (result.ok) {
+        deployFn(missionId, agentId, draftSnapshot, {
+          playHash: result.playHash,
+          acceptTxHash: result.acceptTxHash,
+          submitTxHash: result.submitTxHash,
+        });
+        resetFn();
+        setDetail(result.detail ?? null);
+        setPhase("done");
+        window.setTimeout(() => {
+          if (mounted.current) briefFn(missionId);
+        }, 1800);
+        return;
+      }
+
+      // Failed seal must not lock the operative on the Field desk.
+      setError(result.error ?? "Deployment did not finish on-chain.");
+      setDetail(result.detail ?? null);
+      setPhase("failed");
     });
     // Intentionally omit draft/agent/sealOnChain: status ticks re-render the
     // screen and must not restart or cancel this job.

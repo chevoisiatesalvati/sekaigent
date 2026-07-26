@@ -64,6 +64,8 @@ type FieldState = {
     },
   ) => FieldDeployment;
   markDebriefed: (missionId: string) => void;
+  /** Remove a desk deployment so the operative is free again (local Field only). */
+  releaseDeployment: (missionId: string, agentId: string) => void;
   getForMission: (missionId: string) => FieldDeployment | undefined;
   getDeploymentsForMission: (missionId: string) => FieldDeployment[];
   getActiveForAgent: (agentId: string) => FieldDeployment | undefined;
@@ -157,6 +159,14 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   markDebriefed: (missionId) => {
     const deployments = get().deployments.map((d) =>
       d.missionId === missionId ? { ...d, status: "debriefed" as const } : d,
+    );
+    persist(get().ownerKey, deployments);
+    set({ deployments });
+  },
+  releaseDeployment: (missionId, agentId) => {
+    const key = deploymentKey(missionId, agentId);
+    const deployments = get().deployments.filter(
+      (d) => deploymentKey(d.missionId, d.agentId) !== key,
     );
     persist(get().ownerKey, deployments);
     set({ deployments });

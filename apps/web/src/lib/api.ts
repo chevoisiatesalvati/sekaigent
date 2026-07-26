@@ -303,7 +303,7 @@ export type CreateMissionPayload = {
   title: string;
   publicBrief: string;
   caseFile: CaseDocument[];
-  duration: "daily" | "weekly" | "monthly";
+  duration: "daily" | "weekly" | "monthly" | "demo";
   startsAt: string;
   endsAt: string;
   entryFeeWei: string;

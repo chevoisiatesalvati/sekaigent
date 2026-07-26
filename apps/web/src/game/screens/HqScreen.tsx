@@ -41,16 +41,23 @@ export function HqScreen() {
       setRevealMsg(JSON.stringify(body, null, 2));
       reload();
     } catch (err) {
-      setRevealMsg(err instanceof Error ? err.message : "Reveal failed");
+      const message = err instanceof Error ? err.message : "Reveal failed";
+      setRevealMsg(
+        message.includes("mission_already_revealed") ||
+          message.includes("not open")
+          ? "Already revealed — this case is In review. Nothing left to reveal."
+          : message,
+      );
     } finally {
       setBusyId(null);
     }
   }
 
+  /** Only unrevealed open cases past deadline — Evaluating already revealed on-chain. */
   const revealable = missions.filter(
     (m) =>
       m.on_chain_id != null &&
-      (m.status === "open" || m.status === "evaluating") &&
+      m.status === "open" &&
       new Date(m.ends_at).getTime() <= Date.now(),
   );
 

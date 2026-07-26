@@ -1,7 +1,13 @@
 import { z } from "zod";
 import { CaseDocumentSchema } from "./case-document.js";
 
-export const MissionDurationSchema = z.enum(["daily", "weekly", "monthly"]);
+/** `demo` = 5-minute window for Bureau testing (startsAt/endsAt still authoritative on-chain). */
+export const MissionDurationSchema = z.enum([
+  "daily",
+  "weekly",
+  "monthly",
+  "demo",
+]);
 
 export const MissionStatusSchema = z.enum([
   "scheduled",

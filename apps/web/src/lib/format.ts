@@ -31,6 +31,17 @@ export function formatCountdown(endsAtIso: string, nowMs = Date.now()): string {
   return `${mins}m left`;
 }
 
+/** True when status is open and accept/submit window has not ended. */
+export function isMissionAcceptingOrders(
+  mission: { status: string; ends_at: string },
+  nowMs = Date.now(),
+): boolean {
+  if (mission.status !== "open") return false;
+  const ends = new Date(mission.ends_at).getTime();
+  if (Number.isNaN(ends)) return false;
+  return nowMs < ends;
+}
+
 export function formatPercent(score: number, max: number): number {
   if (max <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round((score / max) * 100)));
