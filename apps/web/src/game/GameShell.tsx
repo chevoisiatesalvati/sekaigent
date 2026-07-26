@@ -130,8 +130,17 @@ export function GameShell() {
     <div className="game-root">
       <header className="game-chrome">
         <div className="game-brand">
-          <h1>Sekaigent</h1>
-          <span>{COPY.brandTagline}</span>
+          <img
+            className="game-brand-mark"
+            src="/logo-mark.png"
+            alt=""
+            width={36}
+            height={36}
+          />
+          <div className="game-brand-copy">
+            <h1>Sekaigent</h1>
+            <span>{COPY.brandTagline}</span>
+          </div>
         </div>
         <WalletButton />
       </header>

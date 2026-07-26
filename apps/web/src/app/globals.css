@@ -73,6 +73,21 @@ a {
 
 .game-brand {
   display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.game-brand-mark {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.game-brand-copy {
+  display: flex;
   align-items: baseline;
   gap: 0.65rem;
   min-width: 0;
