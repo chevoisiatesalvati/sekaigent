@@ -75,10 +75,18 @@ function isUnreachablePostgresError(err: unknown): boolean {
   );
 }
 
+function pgliteDataDir(): string {
+  if (process.env.PGLITE_DATA_DIR) return process.env.PGLITE_DATA_DIR;
+  // Vercel/serverless: only /tmp is writable; repo-relative .data is not.
+  if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return join("/tmp", "sekaigent-pglite");
+  }
+  return join(__dirname, "../../.data/pglite");
+}
+
 async function openPglite(): Promise<DbClient> {
   const { PGlite } = await import("@electric-sql/pglite");
-  const dataDir =
-    process.env.PGLITE_DATA_DIR ?? join(__dirname, "../../.data/pglite");
+  const dataDir = pgliteDataDir();
   mkdirSync(dataDir, { recursive: true });
   const db = new PGlite(dataDir);
   await db.waitReady;
@@ -131,6 +139,17 @@ export async function getPool(): Promise<DbClient> {
     if (pgPool) {
       await pgPool.end().catch(() => undefined);
       pgPool = null;
+    }
+    // Serverless: never fall back to ephemeral PGlite (data loss + often unwritable FS).
+    if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      const hint =
+        config.databaseUrl.includes("localhost") ||
+        config.databaseUrl.includes("127.0.0.1")
+          ? "DATABASE_URL points at localhost — set a hosted Postgres URL (e.g. Neon) on the Vercel project."
+          : "Check DATABASE_URL / network access for hosted Postgres.";
+      throw new Error(
+        `[db] Postgres unreachable on serverless (${config.databaseUrl.split("@").pop() ?? "unknown"}). ${hint}`,
+      );
     }
     console.warn(
       `[db] Postgres unreachable (${config.databaseUrl}); falling back to embedded PGlite. ` +

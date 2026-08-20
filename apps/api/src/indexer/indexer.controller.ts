@@ -15,6 +15,12 @@ export class IndexerController {
     return this.indexer.listEvents();
   }
 
+  /** Advance one indexer chunk (safe to call repeatedly / cron on serverless). */
+  @Post("poll")
+  poll() {
+    return this.indexer.pollOnce();
+  }
+
   @Post("fixtures")
   @UseGuards(AdminGuard)
   ingest(

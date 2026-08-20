@@ -56,3 +56,5 @@ tmp-assets/
 contracts/cache/
 contracts/out/
 contracts/broadcast/*
+.vercel
+.env*

@@ -321,15 +321,43 @@ export async function createMissionAdmin(
   adminAddress: string,
   payload: CreateMissionPayload,
 ): Promise<unknown> {
-  const res = await fetch(`${API_URL}/missions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${adminAddress}`,
-    },
-    body: JSON.stringify(payload),
-  });
-  return res.json();
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/missions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminAddress}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Cannot reach API at ${API_URL} (${reason}). ` +
+        `Set NEXT_PUBLIC_API_URL to your public Nest URL and ensure Deployment Protection is off.`,
+    );
+  }
+  const text = await res.text();
+  let body: unknown = {};
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      body = { raw: text.slice(0, 240) };
+    }
+  }
+  if (!res.ok) {
+    const detail =
+      typeof body === "object" &&
+      body &&
+      "message" in body &&
+      (body as { message?: unknown }).message != null
+        ? String((body as { message: unknown }).message)
+        : text.slice(0, 240) || res.statusText;
+    throw new Error(`Create case failed (${res.status}): ${detail}`);
+  }
+  return body;
 }
 
 export async function revealMissionAdmin(

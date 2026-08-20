@@ -114,7 +114,12 @@ export class MissionsService {
           account: wallet.account!,
           chain: wallet.chain,
         });
-        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        // 0G RPC can be slow to serve receipts; retry instead of leaving orphan rows.
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          timeout: 180_000,
+          pollingInterval: 3_000,
+        });
         createTxHash = receipt.transactionHash;
         // Prefer return value from logs via MissionCreated topic
         for (const log of receipt.logs) {

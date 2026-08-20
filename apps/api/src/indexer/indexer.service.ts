@@ -117,26 +117,27 @@ export class IndexerService implements OnModuleInit, OnModuleDestroy {
       const latest = Number(await client.getBlockNumber());
       if (latest <= last) return { from: last, to: latest, logs: 0 };
 
-      let cursor = last + 1;
-      let totalLogs = 0;
-      while (cursor <= latest) {
-        const to = Math.min(cursor + config.indexerChunkSize - 1, latest);
-        const logs = await client.getLogs({
-          address: config.missionVaultAddress,
-          fromBlock: BigInt(cursor),
-          toBlock: BigInt(to),
-        });
-        totalLogs += await this.indexLogs(logs as Log[]);
-        await pool.query(
-          `UPDATE indexer_state SET last_block = $1, updated_at = NOW() WHERE id = 'mission_vault'`,
-          [to],
-        );
-        cursor = to + 1;
-      }
+      // One chunk per poll — Vercel/serverless kills long backfills from block 0.
+      const cursor = last + 1;
+      const to = Math.min(cursor + config.indexerChunkSize - 1, latest);
+      const logs = await client.getLogs({
+        address: config.missionVaultAddress,
+        fromBlock: BigInt(cursor),
+        toBlock: BigInt(to),
+      });
+      const totalLogs = await this.indexLogs(logs as Log[]);
+      await pool.query(
+        `UPDATE indexer_state SET last_block = $1, updated_at = NOW() WHERE id = 'mission_vault'`,
+        [to],
+      );
       if (totalLogs > 0) {
-        this.logger.log(`indexed ${totalLogs} logs through block ${latest}`);
+        this.logger.log(`indexed ${totalLogs} logs through block ${to}`);
+      } else if (to < latest) {
+        this.logger.debug?.(
+          `indexer advanced ${cursor}-${to} (catching up to ${latest})`,
+        );
       }
-      return { from: last + 1, to: latest, logs: totalLogs };
+      return { from: cursor, to, logs: totalLogs };
     } catch (err) {
       this.logger.warn(
         `indexer poll failed: ${err instanceof Error ? err.message : String(err)}`,
